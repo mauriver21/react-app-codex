@@ -15,7 +15,7 @@ if (!i18n.isInitialized) {
   });
 }
 
-export function I18nProvider({ children }: PropsWithChildren) {
+export const I18nProvider = ({ children }: PropsWithChildren) => {
   const language = useSelector((state: RootState) => state.appState.language);
 
   useEffect(() => {
@@ -25,4 +25,4 @@ export function I18nProvider({ children }: PropsWithChildren) {
   }, [language]);
 
   return <I18nextProvider i18n={i18n}>{children}</I18nextProvider>;
-}
+};

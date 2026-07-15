@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 import type { RootState } from '@/store';
 import { clarityDark, clarityLight } from '@/themes/clarity';
 
-export function ThemeProvider({ children }: PropsWithChildren) {
+export const ThemeProvider = ({ children }: PropsWithChildren) => {
   const mode = useSelector((state: RootState) => state.appState.themeMode);
   return (
     <MuiThemeProvider theme={mode === 'light' ? clarityLight : clarityDark}>
@@ -12,4 +12,4 @@ export function ThemeProvider({ children }: PropsWithChildren) {
       {children}
     </MuiThemeProvider>
   );
-}
+};

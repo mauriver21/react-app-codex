@@ -5,7 +5,7 @@ import type { User } from '@/interfaces/User';
 export const USER_ENTITY_NAME = 'users';
 export const USER_QUERY_KEY = 'users.all';
 
-export function useUserModel() {
+export const useUserModel = () => {
   const api = useUserApiClient();
   const handlers = {
     list: { apiFn: api.list, action: EntityActionType.LIST },
@@ -20,4 +20,4 @@ export function useUserModel() {
     handlers,
     config: { initialLoadingSize: 8 },
   });
-}
+};

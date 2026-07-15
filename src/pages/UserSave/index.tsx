@@ -1,84 +1,74 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Alert, FormControl, InputLabel, MenuItem, Paper, Select } from '@mui/material';
+import { Controller as FormController, useForm } from 'react-hook-form';
 import { useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { Button } from '@/components/Button';
+import { H1 } from '@/components/H1';
+import { Stack } from '@/components/Stack';
+import { TextField } from '@/components/TextField';
 import {
-  Alert,
-  Button,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Paper,
-  Select,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
-import { USER_ROLES, USER_STATUSES, type User, type UserFormValues } from '@/interfaces/User';
+  useUserSaveSchema,
+  type UserSaveFormValues,
+} from '@/form-schemas/useUserSaveSchema';
+import { USER_ROLES, USER_STATUSES, type User } from '@/interfaces/User';
 import { useUserModel } from '@/models/useUserModel';
 import type { RootState } from '@/store';
 
-const emptyValues: UserFormValues = { name: '', email: '', roleId: 'viewer', status: 'active' };
+const emptyValues: UserSaveFormValues = {
+  name: '',
+  email: '',
+  roleId: 'viewer',
+  status: 'active',
+};
 
-export function UserSavePage() {
+const toFormValues = (user: User): UserSaveFormValues => ({
+  name: user.name,
+  email: user.email,
+  roleId: user.roleId,
+  status: user.status,
+});
+
+export const UserSavePage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { id } = useParams();
+  const schema = useUserSaveSchema();
   const model = useUserModel();
   const entity = useSelector((state: RootState) => model.selectEntity(state, id));
   const currentUser = entity.data as User | undefined;
-  const [values, setValues] = useState<UserFormValues>(() =>
-    currentUser
-      ? {
-          name: currentUser.name,
-          email: currentUser.email,
-          roleId: currentUser.roleId,
-          status: currentUser.status,
-        }
-      : emptyValues,
-  );
-  const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string>();
   const isEdit = Boolean(id);
+  const {
+    control,
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<UserSaveFormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: currentUser ? toFormValues(currentUser) : emptyValues,
+  });
 
   useEffect(() => {
     if (id && !currentUser) {
       void model
         .readWithResponse(id)
-        .then(({ data }) => {
-          setValues({ name: data.name, email: data.email, roleId: data.roleId, status: data.status });
-        })
+        .then(({ data }) => reset(toFormValues(data)))
         .catch(() => setError(t('users.loadError')));
     }
     // A route id identifies the one initial record load for this mounted form.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  const validation = useMemo(
-    () => ({
-      name: submitted && !values.name.trim() ? t('validation.required') : '',
-      email:
-        submitted && !values.email.trim()
-          ? t('validation.required')
-          : submitted && !/^\S+@\S+\.\S+$/.test(values.email)
-            ? t('validation.email')
-            : '',
-    }),
-    [submitted, t, values.email, values.name],
-  );
-
-  const submit = async (event: FormEvent) => {
-    event.preventDefault();
-    setSubmitted(true);
+  const submit = async (values: UserSaveFormValues) => {
     setError(undefined);
-    if (!values.name.trim() || !/^\S+@\S+\.\S+$/.test(values.email)) return;
-
     const now = new Date().toISOString();
     const user: User = {
       id: currentUser?.id ?? crypto.randomUUID(),
       ...values,
-      name: values.name.trim(),
-      email: values.email.trim(),
       createdAt: currentUser?.createdAt ?? now,
       updatedAt: now,
     };
@@ -94,51 +84,64 @@ export function UserSavePage() {
 
   return (
     <Stack spacing={3} sx={{ maxWidth: 680, mx: 'auto' }}>
-      <Typography variant="h1">{t(isEdit ? 'users.editTitle' : 'users.createTitle')}</Typography>
+      <H1>{t(isEdit ? 'users.editTitle' : 'users.createTitle')}</H1>
       {error && <Alert severity="error">{error}</Alert>}
-      <Paper component="form" onSubmit={(event) => void submit(event)} variant="outlined" sx={{ p: { xs: 3, sm: 4 } }}>
+      <Paper
+        component="form"
+        onSubmit={handleSubmit(submit)}
+        variant="outlined"
+        sx={{ p: { xs: 3, sm: 4 } }}
+      >
         <Stack spacing={3}>
           <TextField
             label={t('fields.name')}
-            value={values.name}
-            onChange={(event) => setValues({ ...values, name: event.target.value })}
-            error={Boolean(validation.name)}
-            helperText={validation.name}
+            error={Boolean(errors.name)}
+            helperText={errors.name?.message}
             autoFocus
+            {...register('name')}
           />
           <TextField
             label={t('fields.email')}
             type="email"
-            value={values.email}
-            onChange={(event) => setValues({ ...values, email: event.target.value })}
-            error={Boolean(validation.email)}
-            helperText={validation.email}
+            error={Boolean(errors.email)}
+            helperText={errors.email?.message}
+            {...register('email')}
           />
-          <FormControl>
-            <InputLabel id="role-label">{t('fields.role')}</InputLabel>
-            <Select
-              labelId="role-label"
-              label={t('fields.role')}
-              value={values.roleId}
-              onChange={(event) => setValues({ ...values, roleId: event.target.value as User['roleId'] })}
-            >
-              {USER_ROLES.map((role) => <MenuItem key={role} value={role}>{t(`glossary:roles.${role}`)}</MenuItem>)}
-            </Select>
-          </FormControl>
-          <FormControl>
-            <InputLabel id="status-label">{t('fields.status')}</InputLabel>
-            <Select
-              labelId="status-label"
-              label={t('fields.status')}
-              value={values.status}
-              onChange={(event) => setValues({ ...values, status: event.target.value as User['status'] })}
-            >
-              {USER_STATUSES.map((status) => <MenuItem key={status} value={status}>{t(`glossary:statuses.${status}`)}</MenuItem>)}
-            </Select>
-          </FormControl>
+          <FormController
+            name="roleId"
+            control={control}
+            render={({ field }) => (
+              <FormControl>
+                <InputLabel id="role-label">{t('fields.role')}</InputLabel>
+                <Select {...field} labelId="role-label" label={t('fields.role')}>
+                  {USER_ROLES.map((role) => (
+                    <MenuItem key={role} value={role}>
+                      {t(`glossary:roles.${role}`)}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            )}
+          />
+          <FormController
+            name="status"
+            control={control}
+            render={({ field }) => (
+              <FormControl>
+                <InputLabel id="status-label">{t('fields.status')}</InputLabel>
+                <Select {...field} labelId="status-label" label={t('fields.status')}>
+                  {USER_STATUSES.map((status) => (
+                    <MenuItem key={status} value={status}>
+                      {t(`glossary:statuses.${status}`)}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            )}
+          />
           <Stack direction="row" spacing={1.5} sx={{ justifyContent: 'flex-end' }}>
             <Button onClick={() => navigate('/users')}>{t('actions.cancel')}</Button>
-            <Button type="submit" variant="contained" disabled={model.createState.isLoading || model.updateState.isLoading}>
+            <Button type="submit" variant="contained" disabled={isSubmitting}>
               {t('actions.save')}
             </Button>
           </Stack>
@@ -146,4 +149,4 @@ export function UserSavePage() {
       </Paper>
     </Stack>
   );
-}
+};

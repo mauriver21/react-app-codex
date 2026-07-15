@@ -1,4 +1,4 @@
-import common from './common';
-import glossary from './glossary';
+import { common } from './common';
+import { glossary } from './glossary';
 
-export default { common, glossary };
+export const en = { common, glossary };

@@ -24,4 +24,4 @@ const appState = createSlice({
 });
 
 export const { setLanguage, setThemeMode } = appState.actions;
-export default appState.reducer;
+export const appStateReducer = appState.reducer;

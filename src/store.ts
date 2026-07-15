@@ -1,12 +1,16 @@
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import { normalizedEntitiesState } from "react-redux-use-model";
 import { persistReducer, persistStore } from "redux-persist";
-import storage from "redux-persist/lib/storage";
-import appState from "@/states/appState";
+import storageDefault from "redux-persist/lib/storage";
+import { appStateReducer } from "@/states/appState";
+
+// redux-persist exposes storage differently across CommonJS and ESM builds.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const storage = (storageDefault as any).default || storageDefault;
 
 const persistedAppState = persistReducer(
-  { key: "appState", storage: (storage as any).default },
-  appState,
+  { key: "appState", storage },
+  appStateReducer,
 );
 
 export const rootReducer = combineReducers({

@@ -4,24 +4,52 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Alert,
-  Box,
-  Button,
   Chip,
-  CircularProgress,
   Paper,
-  Stack,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Typography,
 } from '@mui/material';
+import { Body1 } from '@/components/Body1';
+import { Box } from '@/components/Box';
+import { Button } from '@/components/Button';
+import { H1 } from '@/components/H1';
+import { Skeleton } from '@/components/Skeleton';
+import { Stack } from '@/components/Stack';
 import { USER_QUERY_KEY, useUserModel } from '@/models/useUserModel';
 import type { RootState } from '@/store';
 
-export function UsersPage() {
+const UserTableSkeleton = ({ label }: { label: string }) => (
+  <TableContainer component={Paper} variant="outlined" aria-label={label}>
+    <Table>
+      <TableHead>
+        <TableRow>
+          {Array.from({ length: 5 }, (_, index) => (
+            <TableCell key={index}>
+              <Skeleton width={index === 4 ? 72 : 96} />
+            </TableCell>
+          ))}
+        </TableRow>
+      </TableHead>
+      <TableBody>
+        {Array.from({ length: 5 }, (_, row) => (
+          <TableRow key={row}>
+            {Array.from({ length: 5 }, (_, column) => (
+              <TableCell key={column} align={column === 4 ? 'right' : 'left'}>
+                <Skeleton width={column === 4 ? 112 : `${72 + column * 6}%`} />
+              </TableCell>
+            ))}
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  </TableContainer>
+);
+
+export const UsersPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const model = useUserModel();
@@ -53,10 +81,10 @@ export function UsersPage() {
     <Stack spacing={3}>
       <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ justifyContent: 'space-between', gap: 2 }}>
         <Box>
-          <Typography variant="h1">{t('users.title')}</Typography>
-          <Typography color="text.secondary" sx={{ mt: 0.75 }}>
+          <H1>{t('users.title')}</H1>
+          <Body1 color="text.secondary" sx={{ mt: 0.75 }}>
             {t('users.subtitle')}
-          </Typography>
+          </Body1>
         </Box>
         <Button variant="contained" onClick={() => navigate('/users/create')} sx={{ alignSelf: 'start' }}>
           {t('actions.create')}
@@ -66,10 +94,7 @@ export function UsersPage() {
       {error && <Alert severity="error">{error}</Alert>}
 
       {model.listState.isLoading && users.length === 0 ? (
-        <Stack direction="row" spacing={1.5} sx={{ py: 6, alignItems: 'center' }}>
-          <CircularProgress size={22} />
-          <Typography>{t('users.loading')}</Typography>
-        </Stack>
+        <UserTableSkeleton label={t('users.loading')} />
       ) : (
         <TableContainer component={Paper} variant="outlined">
           <Table>
@@ -118,4 +143,4 @@ export function UsersPage() {
       )}
     </Stack>
   );
-}
+};

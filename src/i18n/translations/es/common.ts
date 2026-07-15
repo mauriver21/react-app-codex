@@ -1,4 +1,4 @@
-export default {
+export const common = {
   appName: 'Espacio de usuarios',
   navigation: { users: 'Usuarios' },
   actions: {

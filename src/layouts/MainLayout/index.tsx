@@ -1,20 +1,20 @@
 import {
   AppBar,
-  Box,
-  Button,
   Container,
   IconButton,
-  Stack,
   Toolbar,
-  Typography,
 } from '@mui/material';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
+import { Box } from '@/components/Box';
+import { Button } from '@/components/Button';
+import { H6 } from '@/components/H6';
+import { Stack } from '@/components/Stack';
 import { setLanguage, setThemeMode } from '@/states/appState';
 import type { AppDispatch, RootState } from '@/store';
 
-export function MainLayout() {
+export const MainLayout = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
@@ -24,9 +24,9 @@ export function MainLayout() {
     <Box sx={{ minHeight: '100vh' }}>
       <AppBar position="static" color="transparent" elevation={0}>
         <Toolbar sx={{ borderBottom: 1, borderColor: 'divider' }}>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 750 }}>
+          <H6 component="div" sx={{ flexGrow: 1, fontWeight: 750 }}>
             {t('appName')}
-          </Typography>
+          </H6>
           <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
             <Button color="inherit" onClick={() => navigate('/users')}>
               {t('navigation.users')}
@@ -53,4 +53,4 @@ export function MainLayout() {
       </Container>
     </Box>
   );
-}
+};

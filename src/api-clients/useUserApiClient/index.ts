@@ -4,17 +4,17 @@ import type { User } from '@/interfaces/User';
 
 type DataResponse = { data: User };
 
-async function request<T>(url: string, init?: RequestInit): Promise<T> {
+const request = async <T,>(url: string, init?: RequestInit): Promise<T> => {
   const response = await fetch(url, {
     ...init,
     headers: { 'Content-Type': 'application/json', ...init?.headers },
   });
   if (!response.ok) throw new Error(`Request failed with status ${response.status}`);
   return response.json() as Promise<T>;
-}
+};
 
-export function useUserApiClient() {
-  return useMemo(
+export const useUserApiClient = () =>
+  useMemo(
     () => ({
       list: ({ _page, _size, _filter }: PaginationParams) => {
         const params = new URLSearchParams({ page: String(_page), size: String(_size) });
@@ -34,4 +34,3 @@ export function useUserApiClient() {
     }),
     [],
   );
-}

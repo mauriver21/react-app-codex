@@ -12,16 +12,19 @@
   "dependencies": {
     "@emotion/react": "latest",
     "@emotion/styled": "latest",
+    "@hookform/resolvers": "latest",
     "@mui/material": "latest",
     "@reduxjs/toolkit": "latest",
     "i18next": "latest",
     "react": "latest",
     "react-dom": "latest",
     "react-i18next": "latest",
+    "react-hook-form": "latest",
     "react-redux": "latest",
     "react-redux-use-model": "latest",
     "react-router-dom": "latest",
-    "redux-persist": "latest"
+    "redux-persist": "latest",
+    "zod": "latest"
   },
   "devDependencies": {
     "@eslint/js": "latest",

@@ -4,7 +4,7 @@ import { getMockUsers, setMockUsers } from '@/mocks/data/users';
 
 export const userHandlers = [
   http.get('/api/users', async ({ request }) => {
-    await delay(80);
+    await delay(650);
     const url = new URL(request.url);
     const page = Math.max(1, Number(url.searchParams.get('page') ?? 1));
     const size = Math.max(1, Number(url.searchParams.get('size') ?? 20));

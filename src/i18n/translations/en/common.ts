@@ -1,4 +1,4 @@
-export default {
+export const common = {
   appName: 'User workspace',
   navigation: { users: 'Users' },
   actions: {
