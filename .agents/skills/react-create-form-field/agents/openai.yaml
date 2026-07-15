@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Create React Form Field'
+  short_description: 'Create typed React Hook Form field wrappers'
+  default_prompt: 'Use $react-create-form-field to create a typed form field connected to React Hook Form.'

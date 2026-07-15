@@ -1,10 +1,12 @@
 import type { User } from '@/interfaces/User';
 import { getUserApiUrl, USERS_API_URL } from '@/constants/urls';
+import type { UserDataResponse } from '@/interfaces/UserDataResponse';
+import type { UserListResponse } from '@/interfaces/UserListResponse';
 
 describe('mocked User CRUD flow', () => {
   it('lists, creates, updates, reads, and deletes a user', async () => {
     const listResponse = await fetch(`${USERS_API_URL}?page=1&size=20`);
-    const initial = (await listResponse.json()) as { data: User[] };
+    const initial = (await listResponse.json()) as UserListResponse;
     expect(initial.data).toHaveLength(3);
 
     const now = new Date().toISOString();
@@ -29,11 +31,11 @@ describe('mocked User CRUD flow', () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...draft, name: 'Updated User' }),
     });
-    const updated = (await updatedResponse.json()) as { data: User };
+    const updated = (await updatedResponse.json()) as UserDataResponse;
     expect(updated.data.name).toBe('Updated User');
 
     const readResponse = await fetch(getUserApiUrl('usr-test'));
-    const read = (await readResponse.json()) as { data: User };
+    const read = (await readResponse.json()) as UserDataResponse;
     expect(read.data.email).toBe('test@example.com');
 
     const deletedResponse = await fetch(getUserApiUrl('usr-test'), { method: 'DELETE' });

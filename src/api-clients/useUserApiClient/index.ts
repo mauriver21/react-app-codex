@@ -1,8 +1,9 @@
 import { useMemo } from 'react';
-import type { ListResponse, PaginationParams } from 'react-redux-use-model';
+import type { PaginationParams } from 'react-redux-use-model';
 import { getUserApiUrl, USERS_API_URL } from '@/constants/urls';
 import type { User } from '@/interfaces/User';
 import type { UserDataResponse } from '@/interfaces/UserDataResponse';
+import type { UserListResponse } from '@/interfaces/UserListResponse';
 
 const request = async <T>(url: string, init?: RequestInit): Promise<T> => {
   const response = await fetch(url, {
@@ -19,7 +20,7 @@ export const useUserApiClient = () =>
       list: ({ _page, _size, _filter }: PaginationParams) => {
         const params = new URLSearchParams({ page: String(_page), size: String(_size) });
         if (_filter) params.set('filter', _filter);
-        return request<ListResponse<User>>(`${USERS_API_URL}?${params}`);
+        return request<UserListResponse>(`${USERS_API_URL}?${params}`);
       },
       read: (id: string | number) => request<UserDataResponse>(getUserApiUrl(id)),
       create: (user: User) => request<UserDataResponse>(USERS_API_URL, { method: 'POST', body: JSON.stringify(user) }),
