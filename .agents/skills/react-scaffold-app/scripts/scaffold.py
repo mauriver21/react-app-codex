@@ -59,6 +59,15 @@ PACKAGE_JSON = {
     },
 }
 
+PRETTIER_RC = {
+    "semi": True,
+    "singleQuote": True,
+    "tabWidth": 2,
+    "useTabs": False,
+    "trailingComma": "es5",
+    "printWidth": 120,
+}
+
 
 def package_name(value: str) -> str:
     normalized = re.sub(r"[^a-z0-9-]+", "-", value.lower()).strip("-")
@@ -572,6 +581,7 @@ def scaffold(root: Path, name: str, layout: str) -> None:
         .env.prod
         """,
     )
+    write(app_dir / ".prettierrc", json.dumps(PRETTIER_RC, indent=2))
 
     src = app_dir / "src"
     write(src / "main.tsx", main_tsx())

@@ -25,6 +25,7 @@ Create a compact React application scaffold that starts with a real User CRUD ex
    - `withSkeleton` and `SkeletonLoader` loading utilities
    - MUI wrapper components for the scaffolded app
    - MSW browser and Node mocks
+   - `.prettierrc` matching the admin app formatting defaults
    - arrow functions and named exports in generated source files
    - register providers directly in `main.tsx`; do not create an `AppSetup` component
 4. Build the source tree described in [references/scaffold-contract.md](references/scaffold-contract.md).
@@ -53,6 +54,7 @@ Create a compact React application scaffold that starts with a real User CRUD ex
 - `src/components/PasswordField`
 - `src/components/Select`
 - `src/components/Checkbox`
+- `.prettierrc`
 - `src/components/H1` through `src/components/H6`
 - `src/components/Body1` and `src/components/Body2`
 - `src/components/Skeleton`

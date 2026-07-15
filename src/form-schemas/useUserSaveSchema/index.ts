@@ -1,6 +1,6 @@
-import { useMemo } from "react";
-import { useTranslation } from "react-i18next";
-import * as yup from "yup";
+import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+import * as yup from 'yup';
 
 export const useUserSaveSchema = () => {
   const { t } = useTranslation();
@@ -8,27 +8,21 @@ export const useUserSaveSchema = () => {
   return useMemo(
     () =>
       yup.object({
-        name: yup.string().trim().required(t("validation.required")),
-        email: yup
-          .string()
-          .trim()
-          .required(t("validation.required"))
-          .email(t("validation.email")),
+        name: yup.string().trim().required(t('validation.required')),
+        email: yup.string().trim().required(t('validation.required')).email(t('validation.email')),
         roleId: yup
-          .mixed<"admin" | "editor" | "viewer" | "">()
-          .oneOf(["admin", "editor", "viewer", ""])
-          .required(t("validation.required")),
+          .mixed<'admin' | 'editor' | 'viewer' | ''>()
+          .oneOf(['admin', 'editor', 'viewer', ''])
+          .required(t('validation.required')),
         status: yup
-          .mixed<"active" | "inactive" | "">()
-          .oneOf(["active", "inactive", ""])
-          .required(t("validation.required")),
-        password: yup.string().default(""),
+          .mixed<'active' | 'inactive' | ''>()
+          .oneOf(['active', 'inactive', ''])
+          .required(t('validation.required')),
+        password: yup.string().default(''),
         requirePasswordChange: yup.boolean().default(false),
       }),
-    [t],
+    [t]
   );
 };
 
-export type UserSaveFormValues = yup.InferType<
-  ReturnType<typeof useUserSaveSchema>
->;
+export type UserSaveFormValues = yup.InferType<ReturnType<typeof useUserSaveSchema>>;

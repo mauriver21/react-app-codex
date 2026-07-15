@@ -19,6 +19,21 @@ Use this reference when generating the app structure, provider wiring, and User 
 - `yup`
 - `msw`
 
+## Formatting
+
+Write a `.prettierrc` file in the app root with the admin app defaults:
+
+```json
+{
+  "semi": true,
+  "singleQuote": true,
+  "tabWidth": 2,
+  "useTabs": false,
+  "trailingComma": "es5",
+  "printWidth": 120
+}
+```
+
 ## Required Source Layout
 
 ```text
