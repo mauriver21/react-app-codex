@@ -20,6 +20,12 @@ PACKAGE_JSON = {
         "build": "tsc -b && vite build",
         "preview": "vite preview",
         "test": "vitest",
+        "format": "prettier . --write",
+        "format:check": "prettier . --check",
+        "prepare": "husky",
+    },
+    "lint-staged": {
+        "*": "prettier --write --ignore-unknown",
     },
     "dependencies": {
         "@emotion/react": "^11.14.0",
@@ -48,8 +54,11 @@ PACKAGE_JSON = {
         "@types/react-dom": "^19.2.3",
         "@vitejs/plugin-react": "^6.0.3",
         "dotenv": "^17.4.2",
+        "husky": "^9.1.7",
         "jsdom": "^29.1.1",
+        "lint-staged": "^15.2.11",
         "msw": "^2.14.6",
+        "prettier": "^3.9.4",
         "typescript": "~6.0.2",
         "vite": "^8.1.3",
         "vite-plugin-checker": "^0.14.4",
@@ -582,6 +591,14 @@ def scaffold(root: Path, name: str, layout: str) -> None:
         """,
     )
     write(app_dir / ".prettierrc", json.dumps(PRETTIER_RC, indent=2))
+    pre_commit = app_dir / ".husky" / "pre-commit"
+    write(
+        pre_commit,
+        """
+        pnpm exec lint-staged
+        """,
+    )
+    pre_commit.chmod(0o755)
 
     src = app_dir / "src"
     write(src / "main.tsx", main_tsx())
@@ -591,10 +608,14 @@ def scaffold(root: Path, name: str, layout: str) -> None:
     write(src / "store.ts", store_ts())
     write(src / "states" / "appState.ts", app_state_ts())
     write(src / "models" / "useAppModel" / "index.ts", app_model_ts())
+    write(src / "interfaces" / "AppState.ts", app_state_interface_ts())
     write(src / "interfaces" / "ThemeMode.ts", "export type ThemeMode = 'light' | 'dark';")
     write(src / "interfaces" / "ThemeName.ts", "export type ThemeName = 'clarity';")
     write(src / "interfaces" / "User.ts", user_interface_ts())
-    write(src / "constants" / "urls.ts", "export const API_BASE_URL = '/api';")
+    write(src / "interfaces" / "UserSaveFormData.ts", user_save_form_data_ts())
+    write(src / "constants" / "constants.ts", constants_ts())
+    write(src / "constants" / "enums.ts", enums_ts())
+    write(src / "constants" / "urls.ts", urls_ts())
     write(src / "api-clients" / "useUserApiClient" / "index.ts", user_api_client_ts())
     write(src / "models" / "useUserModel" / "index.ts", user_model_ts())
     write(src / "form-schemas" / "useUserSaveSchema" / "index.ts", user_schema_ts())
@@ -795,19 +816,15 @@ export type AppDispatch = typeof store.dispatch;
 def app_state_ts() -> str:
     return """
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import type { AppState } from '@/interfaces/AppState';
 import type { ThemeMode } from '@/interfaces/ThemeMode';
 import type { ThemeName } from '@/interfaces/ThemeName';
-
-export interface AppState {
-  themeName: ThemeName;
-  mode: ThemeMode;
-  selectedLang: string;
-}
+import { DEFAULT_LANGUAGE, DEFAULT_THEME_MODE, DEFAULT_THEME_NAME } from '@/constants/constants';
 
 const initialState: AppState = {
-  themeName: 'clarity',
-  mode: 'light',
-  selectedLang: 'en',
+  themeName: DEFAULT_THEME_NAME,
+  mode: DEFAULT_THEME_MODE,
+  selectedLang: DEFAULT_LANGUAGE,
 };
 
 export const appStateSlice = createSlice({
@@ -825,6 +842,19 @@ export const appStateSlice = createSlice({
     },
   },
 });
+"""
+
+
+def app_state_interface_ts() -> str:
+    return """
+import type { ThemeMode } from '@/interfaces/ThemeMode';
+import type { ThemeName } from '@/interfaces/ThemeName';
+
+export interface AppState {
+  themeName: ThemeName;
+  mode: ThemeMode;
+  selectedLang: string;
+}
 """
 
 
@@ -951,6 +981,7 @@ import { useModel, EntityActionType } from 'react-redux-use-model';
 import type { ListQueryHandler, CreateQueryHandler, UpdateQueryHandler, RemoveQueryHandler, ReadQueryHandler } from 'react-redux-use-model';
 import type { User } from '@/interfaces/User';
 import { useUserApiClient } from '@/api-clients/useUserApiClient';
+import { EntityName } from '@/constants/enums';
 
 export const useUserModel = () => {
   const userApiClient = useUserApiClient();
@@ -965,7 +996,7 @@ export const useUserModel = () => {
       remove: RemoveQueryHandler<User>;
     }
   >({
-    entityName: 'users',
+    entityName: EntityName.Users,
     config: {
       paginationSizeMultiplier: 5,
     },
@@ -1015,8 +1046,9 @@ export const useUserModel = () => {
 def user_schema_ts() -> str:
     return """
 import * as yup from 'yup';
+import type { UserSaveFormData } from '@/interfaces/UserSaveFormData';
 
-export const useUserSaveSchema = () =>
+export const useUserSaveSchema = (): yup.ObjectSchema<UserSaveFormData> =>
   yup.object({
     name: yup.string().required('Name is required'),
     email: yup.string().email('Email is invalid').required('Email is required'),
@@ -1028,6 +1060,47 @@ export const useUserSaveSchema = () =>
     password: yup.string().optional(),
     requirePasswordChange: yup.boolean().default(false),
   });
+"""
+
+
+def user_save_form_data_ts() -> str:
+    return """
+export interface UserSaveFormData {
+  name: string;
+  email: string;
+  roleId: number;
+  status: 'active' | 'inactive' | 'invited';
+  password?: string;
+  requirePasswordChange: boolean;
+}
+"""
+
+
+def constants_ts() -> str:
+    return """
+export const DEFAULT_PAGINATION_SIZE = 10;
+export const DEFAULT_THEME_NAME = 'clarity';
+export const DEFAULT_THEME_MODE = 'light';
+export const DEFAULT_LANGUAGE = 'en';
+export const QUERY_KEY_USERS_CRUD = 'UsersCrud';
+"""
+
+
+def enums_ts() -> str:
+    return """
+export enum EntityName {
+  Users = 'Users',
+}
+
+export enum QueryKey {
+  UsersCrud = 'UsersCrud',
+}
+"""
+
+
+def urls_ts() -> str:
+    return """
+export const API_BASE_URL = '/api';
 """
 
 
@@ -1153,6 +1226,7 @@ import { I18nextProvider, initReactI18next } from 'react-i18next';
 import i18n from 'i18next';
 import { useAppModel } from '@/models/useAppModel';
 import type { ReactNode } from 'react';
+import { DEFAULT_LANGUAGE } from '@/constants/constants';
 
 export const I18nProvider = ({ children, resources }: { children?: ReactNode; resources: any }) => {
   const appModel = useAppModel();
@@ -1161,8 +1235,8 @@ export const I18nProvider = ({ children, resources }: { children?: ReactNode; re
   const i18nInstance = useMemo(() => {
     i18n.use(initReactI18next).init({
       resources,
-      lng: appState.selectedLang || 'en',
-      fallbackLng: 'en',
+      lng: appState.selectedLang || DEFAULT_LANGUAGE,
+      fallbackLng: DEFAULT_LANGUAGE,
       interpolation: {
         escapeValue: false,
       },
@@ -1190,23 +1264,24 @@ import { CssBaseline, ThemeProvider as MuiThemeProvider, capitalize } from '@mui
 import { useAppModel } from '@/models/useAppModel';
 import * as themes from '@/themes/clarity';
 import type { ReactNode } from 'react';
+import { DEFAULT_THEME_MODE, DEFAULT_THEME_NAME } from '@/constants/constants';
 
 export const ThemeProvider = ({ children }: { children?: ReactNode }) => {
   const { selectAppState, setThemeMode, setThemeName } = useAppModel();
   const appState = useSelector(selectAppState);
 
-  const themeName = appState.themeName ?? 'clarity';
-  const mode = appState.mode ?? 'light';
+  const themeName = appState.themeName ?? DEFAULT_THEME_NAME;
+  const mode = appState.mode ?? DEFAULT_THEME_MODE;
   const activeThemeName = `${themeName}${capitalize(mode)}`;
   const currentTheme = (themes as Record<string, any>)[activeThemeName];
 
   useEffect(() => {
-    setThemeName('clarity');
+    setThemeName(DEFAULT_THEME_NAME);
   }, [setThemeName]);
 
   useEffect(() => {
     if (!appState.mode) {
-      setThemeMode('light');
+      setThemeMode(DEFAULT_THEME_MODE);
     }
   }, [appState.mode, setThemeMode]);
 
@@ -1391,18 +1466,19 @@ import { useUserModel } from '@/models/useUserModel';
 import { H1 } from '@/components/H1';
 import { Body1 } from '@/components/Body1';
 import { UserRow } from '@/components/UserRow';
+import { DEFAULT_PAGINATION_SIZE, QUERY_KEY_USERS_CRUD } from '@/constants/constants';
 
 export const Users = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const userModel = useUserModel();
   const userPaginatedQuery = useSelector(userModel.selectPaginatedQuery);
-  const { paginationParams = { _page: 0, _size: 10 }, ids, initialLoading } = userPaginatedQuery;
+  const { paginationParams = { _page: 0, _size: DEFAULT_PAGINATION_SIZE }, ids, initialLoading } = userPaginatedQuery;
   const rowIds = initialLoading ? Array.from({ length: 5 }, (_, index) => `skeleton-${index}`) : ids ?? [];
 
   useEffect(() => {
     userModel.list({
-      queryKey: 'users-crud',
+      queryKey: QUERY_KEY_USERS_CRUD,
       paginationParams,
     });
   }, []);
@@ -1507,8 +1583,9 @@ import { H1 } from '@/components/H1';
 import { useUserModel } from '@/models/useUserModel';
 import { useUserSaveSchema } from '@/form-schemas/useUserSaveSchema';
 import type { RootState } from '@/store';
+import type { UserSaveFormData } from '@/interfaces/UserSaveFormData';
 
-const defaultValues = {
+const defaultValues: UserSaveFormData = {
   name: '',
   email: '',
   roleId: 1,
@@ -1524,7 +1601,7 @@ export const UserSave = () => {
   const userModel = useUserModel();
   const schema = useUserSaveSchema();
   const isEdit = Boolean(id);
-  const { control, handleSubmit, reset } = useForm({
+  const { control, handleSubmit, reset } = useForm<UserSaveFormData>({
     resolver: yupResolver(schema),
     defaultValues,
   });
@@ -1551,7 +1628,7 @@ export const UserSave = () => {
     }
   }, [selected, reset]);
 
-  const onSubmit = async (values: any) => {
+  const onSubmit = async (values: UserSaveFormData) => {
     await userModel.save({ ...values, roleId: Number(values.roleId) });
     navigate('/users');
   };

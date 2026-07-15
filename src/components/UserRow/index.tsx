@@ -6,10 +6,11 @@ import { Button } from '@/components/Button';
 import { TableCell } from '@/components/TableCell';
 import { TableRow } from '@/components/TableRow';
 import { useSkeletonContext } from '@/components/SkeletonLoader';
+import { getUserEditRoute } from '@/constants/routes';
 import { withSkeleton } from '@/hocs/withSkeleton';
+import type { RootState } from '@/interfaces/RootState';
 import type { User } from '@/interfaces/User';
 import { useUserModel } from '@/models/useUserModel';
-import type { RootState } from '@/store';
 
 const CellContentBase = ({ children }: PropsWithChildren) => <>{children}</>;
 const CellContent = withSkeleton(CellContentBase, { height: 24, width: '78%' });
@@ -51,7 +52,7 @@ export const UserRow = ({ userId, onDelete }: UserRowProps) => {
         <CellContent skeletonText={t('fields.actions')}>
           {user && (
             <>
-              <Button size="small" onClick={() => navigate(`/users/${user.id}`)}>
+              <Button size="small" onClick={() => navigate(getUserEditRoute(user.id))}>
                 {t('actions.edit')}
               </Button>
               <Button size="small" color="error" onClick={() => onDelete(user)}>

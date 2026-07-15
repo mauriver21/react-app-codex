@@ -6,8 +6,14 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
     "lint": "eslint .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*": "prettier --write --ignore-unknown"
   },
   "dependencies": {
     "@emotion/react": "latest",
@@ -40,14 +46,19 @@
     "eslint-plugin-react-hooks": "latest",
     "eslint-plugin-react-refresh": "latest",
     "globals": "latest",
+    "husky": "latest",
     "jsdom": "latest",
+    "lint-staged": "latest",
     "msw": "latest",
+    "prettier": "latest",
     "typescript": "^6.0.2",
     "typescript-eslint": "latest",
     "vite": "latest",
     "vitest": "latest"
   },
   "msw": {
-    "workerDirectory": ["public"]
+    "workerDirectory": [
+      "public"
+    ]
   }
 }

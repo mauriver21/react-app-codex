@@ -9,8 +9,11 @@ import { H6 } from '@/components/H6';
 import { Stack } from '@/components/Stack';
 import { Switch } from '@/components/Switch';
 import { Toolbar } from '@/components/Toolbar';
+import { DARK_THEME_MODE, LIGHT_THEME_MODE } from '@/constants/constants';
+import { USERS_ROUTE } from '@/constants/routes';
+import type { AppDispatch } from '@/interfaces/AppDispatch';
+import type { RootState } from '@/interfaces/RootState';
 import { setLanguage, setThemeMode } from '@/states/appState';
-import type { AppDispatch, RootState } from '@/store';
 
 export const MainLayout = () => {
   const { t } = useTranslation();
@@ -26,20 +29,18 @@ export const MainLayout = () => {
             {t('appName')}
           </H6>
           <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-            <Button color="inherit" onClick={() => navigate('/users')}>
+            <Button color="inherit" onClick={() => navigate(USERS_ROUTE)}>
               {t('navigation.users')}
             </Button>
-            <Button
-              color="inherit"
-              size="small"
-              onClick={() => dispatch(setLanguage(language === 'en' ? 'es' : 'en'))}
-            >
+            <Button color="inherit" size="small" onClick={() => dispatch(setLanguage(language === 'en' ? 'es' : 'en'))}>
               {t('actions.switchLanguage')}
             </Button>
             <Switch
-              checked={themeMode === 'dark'}
+              checked={themeMode === DARK_THEME_MODE}
               slotProps={{ input: { 'aria-label': t('actions.switchTheme') } }}
-              onClick={() => dispatch(setThemeMode(themeMode === 'light' ? 'dark' : 'light'))}
+              onClick={() =>
+                dispatch(setThemeMode(themeMode === LIGHT_THEME_MODE ? DARK_THEME_MODE : LIGHT_THEME_MODE))
+              }
             />
           </Stack>
         </Toolbar>

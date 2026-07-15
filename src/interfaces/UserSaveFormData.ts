@@ -1,14 +1,11 @@
 import type { UserRole } from '@/interfaces/UserRole';
 import type { UserStatus } from '@/interfaces/UserStatus';
 
-export interface User {
-  id: string;
+export interface UserSaveFormData {
   name: string;
   email: string;
   roleId: UserRole;
   status: UserStatus;
-  password?: string;
-  requirePasswordChange?: boolean;
-  createdAt: string;
-  updatedAt: string;
+  password: string;
+  requirePasswordChange: boolean;
 }

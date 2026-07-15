@@ -1,13 +1,11 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-
-export interface AppState {
-  themeMode: 'light' | 'dark';
-  language: 'en' | 'es';
-}
+import { DEFAULT_LANGUAGE, DEFAULT_THEME_MODE, DEFAULT_THEME_NAME } from '@/constants/constants';
+import type { AppState } from '@/interfaces/AppState';
 
 const initialState: AppState = {
-  themeMode: 'light',
-  language: 'en',
+  themeName: DEFAULT_THEME_NAME,
+  themeMode: DEFAULT_THEME_MODE,
+  language: DEFAULT_LANGUAGE,
 };
 
 const appState = createSlice({

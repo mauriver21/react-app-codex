@@ -17,9 +17,11 @@ import { TableContainer } from '@/components/TableContainer';
 import { TableHead } from '@/components/TableHead';
 import { TableRow } from '@/components/TableRow';
 import { UserRow } from '@/components/UserRow';
+import { USER_QUERY_KEY } from '@/constants/enums';
+import { USER_CREATE_ROUTE } from '@/constants/routes';
+import type { RootState } from '@/interfaces/RootState';
 import type { User } from '@/interfaces/User';
-import { USER_QUERY_KEY, useUserModel } from '@/models/useUserModel';
-import type { RootState } from '@/store';
+import { useUserModel } from '@/models/useUserModel';
 
 export const UsersPage = () => {
   const { t } = useTranslation();
@@ -62,7 +64,7 @@ export const UsersPage = () => {
             {t('users.subtitle')}
           </Body1>
         </Box>
-        <Button variant="contained" onClick={() => navigate('/users/create')} sx={{ alignSelf: 'start' }}>
+        <Button variant="contained" onClick={() => navigate(USER_CREATE_ROUTE)} sx={{ alignSelf: 'start' }}>
           {t('actions.create')}
         </Button>
       </Stack>
@@ -72,29 +74,29 @@ export const UsersPage = () => {
       <Card variant="outlined">
         <SkeletonLoader loading={initialLoading} skeletonProps={{ animation: 'wave' }}>
           <TableContainer aria-label={initialLoading ? t('users.loading') : undefined}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>{t('fields.name')}</TableCell>
-                <TableCell>{t('fields.email')}</TableCell>
-                <TableCell>{t('fields.role')}</TableCell>
-                <TableCell>{t('fields.status')}</TableCell>
-                <TableCell align="right">{t('fields.actions')}</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {rowIds.map((userId) => (
-                <UserRow key={userId} userId={userId} onDelete={(user) => void removeUser(user)} />
-              ))}
-              {!initialLoading && users.length === 0 && (
+            <Table>
+              <TableHead>
                 <TableRow>
-                  <TableCell colSpan={5} align="center" sx={{ py: 7, color: 'text.secondary' }}>
-                    {t('users.empty')}
-                  </TableCell>
+                  <TableCell>{t('fields.name')}</TableCell>
+                  <TableCell>{t('fields.email')}</TableCell>
+                  <TableCell>{t('fields.role')}</TableCell>
+                  <TableCell>{t('fields.status')}</TableCell>
+                  <TableCell align="right">{t('fields.actions')}</TableCell>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
+              </TableHead>
+              <TableBody>
+                {rowIds.map((userId) => (
+                  <UserRow key={userId} userId={userId} onDelete={(user) => void removeUser(user)} />
+                ))}
+                {!initialLoading && users.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={5} align="center" sx={{ py: 7, color: 'text.secondary' }}>
+                      {t('users.empty')}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
           </TableContainer>
         </SkeletonLoader>
       </Card>

@@ -13,12 +13,15 @@ import { PasswordField } from '@/components/PasswordField';
 import { Select } from '@/components/Select';
 import { Stack } from '@/components/Stack';
 import { TextField } from '@/components/TextField';
-import { useUserSaveSchema, type UserSaveFormValues } from '@/form-schemas/useUserSaveSchema';
-import { USER_ROLES, USER_STATUSES, type User } from '@/interfaces/User';
+import { USER_ROLES, USER_STATUSES } from '@/constants/enums';
+import { USERS_ROUTE } from '@/constants/routes';
+import { useUserSaveSchema } from '@/form-schemas/useUserSaveSchema';
+import type { RootState } from '@/interfaces/RootState';
+import type { User } from '@/interfaces/User';
+import type { UserSaveFormData } from '@/interfaces/UserSaveFormData';
 import { useUserModel } from '@/models/useUserModel';
-import type { RootState } from '@/store';
 
-const emptyValues: UserSaveFormValues = {
+const emptyValues: UserSaveFormData = {
   name: '',
   email: '',
   roleId: '',
@@ -27,7 +30,7 @@ const emptyValues: UserSaveFormValues = {
   requirePasswordChange: false,
 };
 
-const toFormValues = (user: User): UserSaveFormValues => ({
+const toFormValues = (user: User): UserSaveFormData => ({
   name: user.name,
   email: user.email,
   roleId: user.roleId,
@@ -51,7 +54,7 @@ export const UserSavePage = () => {
     handleSubmit,
     reset,
     formState: { isSubmitting },
-  } = useForm<UserSaveFormValues>({
+  } = useForm<UserSaveFormData>({
     resolver: yupResolver(schema),
     defaultValues: currentUser ? toFormValues(currentUser) : emptyValues,
   });
@@ -67,7 +70,7 @@ export const UserSavePage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  const submit = async (values: UserSaveFormValues) => {
+  const submit = async (values: UserSaveFormData) => {
     setError(undefined);
     const now = new Date().toISOString();
     const user: User = {
@@ -80,7 +83,7 @@ export const UserSavePage = () => {
     try {
       if (isEdit && id) await model.updateWithResponse(id, user);
       else await model.createWithResponse(user);
-      navigate('/users');
+      navigate(USERS_ROUTE);
     } catch {
       setError(t('users.saveError'));
     }
@@ -92,9 +95,9 @@ export const UserSavePage = () => {
       {error && <Alert severity="error">{error}</Alert>}
       <Card component="form" onSubmit={handleSubmit(submit)} variant="outlined" sx={{ p: { xs: 3, sm: 4 } }}>
         <Stack spacing={3}>
-          <TextField<UserSaveFormValues> name="name" control={control} label={t('fields.name')} autoFocus />
-          <TextField<UserSaveFormValues> name="email" control={control} label={t('fields.email')} type="email" />
-          <Select<UserSaveFormValues>
+          <TextField<UserSaveFormData> name="name" control={control} label={t('fields.name')} autoFocus />
+          <TextField<UserSaveFormData> name="email" control={control} label={t('fields.email')} type="email" />
+          <Select<UserSaveFormData>
             name="roleId"
             control={control}
             label={t('fields.role')}
@@ -103,7 +106,7 @@ export const UserSavePage = () => {
               label: t(`glossary:roles.${role}`),
             }))}
           />
-          <Select<UserSaveFormValues>
+          <Select<UserSaveFormData>
             name="status"
             control={control}
             label={t('fields.status')}
@@ -112,20 +115,20 @@ export const UserSavePage = () => {
               label: t(`glossary:statuses.${status}`),
             }))}
           />
-          <PasswordField<UserSaveFormValues>
+          <PasswordField<UserSaveFormData>
             name="password"
             control={control}
             label={t('fields.password')}
             showPasswordLabel={t('actions.showPassword')}
             hidePasswordLabel={t('actions.hidePassword')}
           />
-          <Checkbox<UserSaveFormValues>
+          <Checkbox<UserSaveFormData>
             name="requirePasswordChange"
             control={control}
             label={t('fields.requirePasswordChange')}
           />
           <Stack direction="row" spacing={1.5} sx={{ justifyContent: 'flex-end' }}>
-            <Button onClick={() => navigate('/users')}>{t('actions.cancel')}</Button>
+            <Button onClick={() => navigate(USERS_ROUTE)}>{t('actions.cancel')}</Button>
             <Button type="submit" variant="contained" disabled={isSubmitting}>
               {t('actions.save')}
             </Button>

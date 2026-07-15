@@ -1,0 +1,4 @@
+interface:
+  display_name: 'React Separate Constants'
+  short_description: 'Keep shared React constants in src/constants'
+  default_prompt: 'Use $react-separate-constants to move shared React app constants like query keys, entity names, URLs, and layout values into src/constants while leaving component-local values in the component.'

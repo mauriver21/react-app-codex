@@ -1,9 +1,7 @@
 import { EntityActionType, useModel, type CrudQueryHandlers } from 'react-redux-use-model';
 import { useUserApiClient } from '@/api-clients/useUserApiClient';
+import { USER_ENTITY_NAME } from '@/constants/enums';
 import type { User } from '@/interfaces/User';
-
-export const USER_ENTITY_NAME = 'users';
-export const USER_QUERY_KEY = 'users.all';
 
 export const useUserModel = () => {
   const api = useUserApiClient();

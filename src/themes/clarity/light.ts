@@ -1,8 +1,9 @@
 import { createTheme } from '@mui/material/styles';
+import { LIGHT_THEME_MODE } from '@/constants/constants';
 
 export const clarityLight = createTheme({
   palette: {
-    mode: 'light',
+    mode: LIGHT_THEME_MODE,
     primary: { main: '#315a74' },
     secondary: { main: '#bc5b35' },
     background: { default: '#f4f7f8', paper: '#ffffff' },

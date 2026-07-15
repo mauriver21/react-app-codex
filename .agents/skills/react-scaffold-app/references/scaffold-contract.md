@@ -34,6 +34,12 @@ Write a `.prettierrc` file in the app root with the admin app defaults:
 }
 ```
 
+Add Husky formatting support:
+
+- `package.json` should include `prepare: "husky"` and a `lint-staged` block that runs Prettier on staged files.
+- Create `.husky/pre-commit` with `pnpm exec lint-staged`.
+- Include `husky`, `lint-staged`, and `prettier` in devDependencies.
+
 ## Required Source Layout
 
 ```text
@@ -89,9 +95,17 @@ src/
 ├── hocs/
 │   └── withSkeleton/
 ├── interfaces/
-│   └── User.ts
+│   ├── AppState.ts
+│   ├── ThemeMode.ts
+│   ├── ThemeName.ts
+│   ├── User.ts
+│   └── UserSaveFormData.ts
 ├── form-schemas/
 │   └── useUserSaveSchema/
+├── constants/
+│   ├── constants.ts
+│   ├── enums.ts
+│   └── urls.ts
 ├── i18n/
 │   └── translations/
 │       ├── en/
@@ -150,6 +164,8 @@ Use `react-redux-use-model` for a typed CRUD model.
 Required pieces:
 
 - `User` interface with `id`, `name`, `email`, `roleId`, `status`, and timestamps
+- `AppState`, `ThemeMode`, `ThemeName`, and `UserSaveFormData` in `src/interfaces`
+- shared app constants like `QueryKey`, `EntityName`, and layout values in `src/constants`
 - `useUserApiClient`
 - `useUserModel`
 - `normalizedEntitiesState` in the root reducer
@@ -176,6 +192,8 @@ Include MSW in the base scaffold:
 - `mocks/handlers/userHandler.ts` with list/read/create/update/delete handlers
 - `setupTests.ts` to start and reset the Node server
 - make the list handler slow enough that the initial table skeleton appears during first load
+- run Prettier on staged files through Husky before commits
+- keep app/domain types in `src/interfaces`; component prop interfaces stay in their component files
 
 Use in-memory mock data and keep the CRUD handlers aligned with the model layer.
 

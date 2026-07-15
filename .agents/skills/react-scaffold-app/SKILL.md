@@ -24,10 +24,13 @@ Create a compact React application scaffold that starts with a real User CRUD ex
    - RHF-enhanced field components (`TextField`, `PasswordField`, `Select`, `Checkbox`)
    - `withSkeleton` and `SkeletonLoader` loading utilities
    - MUI wrapper components for the scaffolded app
+   - shared app constants in `src/constants`
    - MSW browser and Node mocks
    - `.prettierrc` matching the admin app formatting defaults
+   - Husky pre-commit formatting with Prettier
    - arrow functions and named exports in generated source files
    - register providers directly in `main.tsx`; do not create an `AppSetup` component
+   - put app/domain types in `src/interfaces`; keep component prop interfaces beside the component file
 4. Build the source tree described in [references/scaffold-contract.md](references/scaffold-contract.md).
    - Use [scripts/scaffold.py](scripts/scaffold.py) when you need a deterministic starter tree.
 5. Keep the UI minimal and CRUD-oriented:
@@ -47,6 +50,9 @@ Create a compact React application scaffold that starts with a real User CRUD ex
 - `src/api-clients/useUserApiClient`
 - `src/models/useUserModel`
 - `src/form-schemas/useUserSaveSchema`
+- `src/constants/constants.ts`
+- `src/constants/enums.ts`
+- `src/constants/urls.ts`
 - `src/mocks/browser.ts`, `src/mocks/server.ts`, `src/mocks/handlers`, and `src/mocks/data`
 - `src/hocs/withSkeleton`
 - `src/components/SkeletonLoader`
@@ -55,6 +61,7 @@ Create a compact React application scaffold that starts with a real User CRUD ex
 - `src/components/Select`
 - `src/components/Checkbox`
 - `.prettierrc`
+- `.husky/pre-commit`
 - `src/components/H1` through `src/components/H6`
 - `src/components/Body1` and `src/components/Body2`
 - `src/components/Skeleton`

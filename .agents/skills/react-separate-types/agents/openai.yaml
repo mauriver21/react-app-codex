@@ -1,0 +1,4 @@
+interface:
+  display_name: 'React Separate Types'
+  short_description: 'Keep React types in dedicated files'
+  default_prompt: 'Use $react-separate-types to move React app and domain types into dedicated files while keeping only component prop interfaces beside the component.'

@@ -1,8 +1,9 @@
 import { createTheme } from '@mui/material/styles';
+import { DARK_THEME_MODE } from '@/constants/constants';
 
 export const clarityDark = createTheme({
   palette: {
-    mode: 'dark',
+    mode: DARK_THEME_MODE,
     primary: { main: '#84b7d4' },
     secondary: { main: '#ef9a75' },
     background: { default: '#10191f', paper: '#18252d' },
