@@ -13,6 +13,7 @@
     "@emotion/react": "latest",
     "@emotion/styled": "latest",
     "@hookform/resolvers": "latest",
+    "@mui/icons-material": "latest",
     "@mui/material": "latest",
     "@reduxjs/toolkit": "latest",
     "i18next": "latest",
@@ -24,7 +25,7 @@
     "react-redux-use-model": "latest",
     "react-router-dom": "latest",
     "redux-persist": "latest",
-    "zod": "latest"
+    "yup": "latest"
   },
   "devDependencies": {
     "@eslint/js": "latest",

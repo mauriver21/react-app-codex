@@ -6,7 +6,6 @@ from __future__ import annotations
 import argparse
 import json
 import re
-import shutil
 from pathlib import Path
 from textwrap import dedent
 
@@ -26,6 +25,7 @@ PACKAGE_JSON = {
         "@emotion/react": "^11.14.0",
         "@emotion/styled": "^11.14.1",
         "@hookform/resolvers": "^5.4.0",
+        "@mui/icons-material": "^9.2.0",
         "@mui/material": "^9.2.0",
         "@reduxjs/toolkit": "^2.12.0",
         "i18next": "^26.3.4",
@@ -72,12 +72,12 @@ def write(path: Path, content: str) -> None:
     path.write_text(dedent(content).strip() + "\n", encoding="utf-8")
 
 
-def component_passthrough(component: str, source: str, props_type: str | None = None) -> str:
-    props_line = f"export interface {component}Props extends {props_type} {{}}" if props_type else f"export interface {component}Props {{}}"
+def mui_wrapper_ts(component: str, mui_component: str | None = None) -> str:
+    source = mui_component or component
     return f"""
 import {{ {source} as Mui{source}, {source}Props as Mui{source}Props }} from '@mui/material';
 
-{props_line}
+export interface {component}Props extends Mui{source}Props {{}}
 
 export const {component} = (props: {component}Props) => <Mui{source} {{...props}} />;
 """
@@ -91,6 +91,353 @@ export interface {component}Props extends TypographyProps {{}}
 
 export const {component} = (props: {component}Props) => <Typography variant="{variant}" {{...props}} />;
 """
+
+
+def text_field_ts() -> str:
+    return """
+import { TextField as MuiTextField, TextFieldProps as MuiTextFieldProps } from '@mui/material';
+import { Control, FieldPath, useController } from 'react-hook-form';
+
+export type TextFieldProps<TFieldValues extends Record<string, any> = Record<string, any>> = MuiTextFieldProps & {
+  control?: Control<TFieldValues>;
+  name?: FieldPath<TFieldValues>;
+  errorMessage?: string;
+  hideErrorMessage?: boolean;
+};
+
+export const TextField = <TFieldValues extends Record<string, any> = Record<string, any>>({
+  name,
+  control,
+  onChange: onChangeProp,
+  required,
+  slotProps,
+  hideErrorMessage,
+  ...rest
+}: TextFieldProps<TFieldValues>) => {
+  const { field, fieldState } = name ? useController({ name, control }) : {};
+  const error = fieldState?.invalid;
+  const errorMessage = fieldState?.error?.message;
+  const { onChange: fieldOnChange, ...restField } = field || {};
+
+  const onChange: TextFieldProps<TFieldValues>['onChange'] = (event) => {
+    onChangeProp?.(event);
+    fieldOnChange?.(event);
+  };
+
+  return (
+    <MuiTextField
+      {...restField}
+      slotProps={{
+        inputLabel: { required, ...slotProps?.inputLabel },
+        ...slotProps,
+      }}
+      onChange={onChange}
+      fullWidth
+      error={error}
+      helperText={hideErrorMessage ? undefined : errorMessage}
+      {...rest}
+    />
+  );
+};
+"""
+
+
+def password_field_ts() -> str:
+    return """
+import { useState } from 'react';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
+import { Box } from '@/components/Box';
+import { IconButton } from '@/components/IconButton';
+import { InputAdornment } from '@/components/InputAdornment';
+import { Stack } from '@/components/Stack';
+import { TextField, TextFieldProps } from '@/components/TextField';
+
+export type PasswordFieldProps<TFieldValues extends Record<string, any> = Record<string, any>> = TextFieldProps<TFieldValues>;
+
+export const PasswordField = <TFieldValues extends Record<string, any> = Record<string, any>>({
+  slotProps,
+  ...props
+}: PasswordFieldProps<TFieldValues>) => {
+  const [showPassword, setShowPassword] = useState(false);
+
+  return (
+    <Stack direction="row" spacing={1} sx={{ alignItems: 'flex-start' }}>
+      <Box sx={{ flex: 1 }}>
+        <TextField<TFieldValues>
+          {...props}
+          type={showPassword ? 'text' : 'password'}
+          slotProps={{
+            ...slotProps,
+            input: {
+              ...slotProps?.input,
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    type="button"
+                    onClick={() => setShowPassword((value) => !value)}
+                    size="small"
+                    sx={{
+                      border: 'none',
+                      boxShadow: 'none',
+                      bgcolor: 'transparent',
+                      width: 28,
+                      height: 28,
+                    }}
+                  >
+                    {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            },
+          }}
+        />
+      </Box>
+    </Stack>
+  );
+};
+"""
+
+
+def select_ts() -> str:
+    return """
+import React, { useId } from 'react';
+import { Select as MuiSelect, SelectProps as MuiSelectProps } from '@mui/material';
+import { Control, FieldPath, useController } from 'react-hook-form';
+import { FormControl } from '@/components/FormControl';
+import { FormHelperText } from '@/components/FormHelperText';
+import { InputLabel } from '@/components/InputLabel';
+import { MenuItem } from '@/components/MenuItem';
+
+export type SelectOption = {
+  value: string | number | undefined;
+  label: string;
+};
+
+export type SelectProps<TFieldValues extends Record<string, any> = Record<string, any>> = MuiSelectProps & {
+  control?: Control<TFieldValues>;
+  name?: FieldPath<TFieldValues>;
+  label?: string;
+  options?: SelectOption[];
+  helperText?: React.ReactNode;
+  errorMessage?: string;
+  hideErrorMessage?: boolean;
+};
+
+export const Select = <TFieldValues extends Record<string, any> = Record<string, any>>({
+  name,
+  control,
+  label,
+  options = [],
+  error: errorProp,
+  errorMessage: errorMessageProp,
+  helperText,
+  hideErrorMessage,
+  required,
+  children,
+  onChange: onChangeProp,
+  ...rest
+}: SelectProps<TFieldValues>) => {
+  const { field, fieldState } = name ? useController({ name, control }) : {};
+  const error = fieldState?.invalid || errorProp;
+  const errorMessage = fieldState?.error?.message || errorMessageProp;
+  const { onChange: fieldOnChange, name: fieldName, value: fieldValue, ...restField } = field || {};
+  const labelId = label ? `select-label-${fieldName || useId()}` : undefined;
+  const activeHelperText = error ? errorMessage : helperText;
+
+  const rawValue = fieldValue !== undefined ? fieldValue : rest.value;
+  const value = rawValue === null || rawValue === undefined ? '' : rawValue;
+
+  const onChange: SelectProps<TFieldValues>['onChange'] = (event, child) => {
+    onChangeProp?.(event, child);
+    fieldOnChange?.(event);
+  };
+
+  return (
+    <FormControl fullWidth error={error} size={rest.size}>
+      {label && (
+        <InputLabel required={required} id={labelId}>
+          {label}
+        </InputLabel>
+      )}
+      <MuiSelect
+        {...restField}
+        value={value}
+        name={fieldName}
+        onChange={onChange}
+        labelId={labelId}
+        label={label}
+        {...rest}
+      >
+        {children
+          ? children
+          : options.map((option) => (
+              <MenuItem key={String(option.value)} value={option.value}>
+                {option.label}
+              </MenuItem>
+            ))}
+      </MuiSelect>
+      {!hideErrorMessage && activeHelperText && <FormHelperText>{activeHelperText}</FormHelperText>}
+    </FormControl>
+  );
+};
+"""
+
+
+def checkbox_ts() -> str:
+    return """
+import React from 'react';
+import { Checkbox as MuiCheckbox, CheckboxProps as MuiCheckboxProps } from '@mui/material';
+import { Control, FieldPath, useController } from 'react-hook-form';
+import { FormControl } from '@/components/FormControl';
+import { FormHelperText } from '@/components/FormHelperText';
+import { FormControlLabel } from '@/components/FormControlLabel';
+
+export type CheckboxProps<TFieldValues extends Record<string, any> = Record<string, any>> = Omit<
+  MuiCheckboxProps,
+  'checked' | 'error'
+> & {
+  control?: Control<TFieldValues>;
+  name?: FieldPath<TFieldValues>;
+  label?: string;
+  errorMessage?: string;
+  hideErrorMessage?: boolean;
+  helperText?: React.ReactNode;
+  error?: boolean;
+  checked?: boolean;
+};
+
+export const Checkbox = <TFieldValues extends Record<string, any> = Record<string, any>>({
+  name,
+  control,
+  label,
+  error: errorProp,
+  errorMessage: errorMessageProp,
+  helperText,
+  hideErrorMessage,
+  required,
+  checked: checkedProp,
+  ...rest
+}: CheckboxProps<TFieldValues>) => {
+  const { field, fieldState } = name ? useController({ name, control }) : {};
+  const error = fieldState?.invalid || errorProp;
+  const errorMessage = fieldState?.error?.message || errorMessageProp;
+  const activeHelperText = error ? errorMessage : helperText;
+  const { onChange: fieldOnChange, value: fieldValue, ...restField } = field || {};
+
+  const checked = fieldValue !== undefined ? Boolean(fieldValue) : checkedProp;
+
+  const checkboxElement = (
+    <MuiCheckbox
+      {...restField}
+      checked={checked}
+      onChange={(e) => {
+        fieldOnChange?.(e.target.checked);
+        (rest as any).onChange?.(e);
+      }}
+      required={required}
+      {...rest}
+    />
+  );
+
+  return (
+    <FormControl error={error} required={required}>
+      {label ? <FormControlLabel control={checkboxElement} label={label} /> : checkboxElement}
+      {!hideErrorMessage && activeHelperText && <FormHelperText>{activeHelperText}</FormHelperText>}
+    </FormControl>
+  );
+};
+"""
+
+
+def form_control_label_ts() -> str:
+    return """
+import { FormControlLabel as MuiFormControlLabel, FormControlLabelProps as MuiFormControlLabelProps } from '@mui/material';
+
+export interface FormControlLabelProps extends MuiFormControlLabelProps {}
+
+export const FormControlLabel = (props: FormControlLabelProps) => <MuiFormControlLabel {...props} />;
+"""
+
+
+def skeleton_loader_ts() -> str:
+    return """
+import { createContext, useContext } from 'react';
+import type { ReactNode } from 'react';
+import type { SkeletonProps } from '@/components/Skeleton';
+
+export const SkeletonContext = createContext<Pick<SkeletonLoaderProps, 'loading' | 'skeletonProps'> | null>(null);
+export const useSkeletonContext = () => useContext(SkeletonContext);
+
+export interface SkeletonLoaderProps {
+  loading?: boolean;
+  skeletonProps?: Omit<SkeletonProps, 'children' | 'loading'>;
+  children?: ReactNode;
+}
+
+export const SkeletonLoader = ({ children, loading, skeletonProps }: SkeletonLoaderProps) => (
+  <SkeletonContext.Provider value={{ skeletonProps, loading }}>{children}</SkeletonContext.Provider>
+);
+"""
+
+
+def with_skeleton_ts() -> str:
+    return """
+import { JSX } from 'react/jsx-runtime';
+import type { FC } from 'react';
+import { Skeleton, SkeletonProps } from '@/components/Skeleton';
+import { useSkeletonContext } from '@/components/SkeletonLoader';
+
+export interface WithSkeletonProps {
+  skeletonText?: string;
+  hideOnSkeleton?: boolean;
+}
+
+export const withSkeleton = <T,>(Component: FC<T>, defaultProps?: Partial<SkeletonProps>) => {
+  return (props: T & WithSkeletonProps & JSX.IntrinsicAttributes) => {
+    const skeletonContext = useSkeletonContext();
+
+    return (
+      <Skeleton
+        {...{ ...skeletonContext?.skeletonProps, ...defaultProps }}
+        hideOnSkeleton={props.hideOnSkeleton}
+        loading={skeletonContext?.loading}
+      >
+        <Component {...props} />
+      </Skeleton>
+    );
+  };
+};
+"""
+
+
+def switch_ts() -> str:
+    return mui_wrapper_ts("Switch")
+
+
+def app_bar_ts() -> str:
+    return mui_wrapper_ts("AppBar")
+
+
+def container_ts() -> str:
+    return mui_wrapper_ts("Container")
+
+
+def table_cell_head_ts() -> str:
+    return """
+import { TableCell as MuiTableCell, TableCellProps as MuiTableCellProps } from '@mui/material';
+
+export interface TableCellHeadProps extends MuiTableCellProps {}
+
+export const TableCellHead = (props: TableCellHeadProps) => <MuiTableCell variant="head" {...props} />;
+"""
+
+
+def toolbar_ts() -> str:
+    return mui_wrapper_ts("Toolbar")
+
+
+def typography_base_ts() -> str:
+    return mui_wrapper_ts("Typography")
 
 
 def scaffold(root: Path, name: str, layout: str) -> None:
@@ -244,12 +591,47 @@ def scaffold(root: Path, name: str, layout: str) -> None:
     write(src / "components" / "I18nProvider" / "index.tsx", i18n_provider_ts())
     write(src / "components" / "ThemeProvider" / "index.tsx", theme_provider_ts())
     write(src / "components" / "Skeleton" / "index.tsx", skeleton_ts())
-    write(src / "components" / "UsersTableSkeleton" / "index.tsx", users_table_skeleton_ts())
-    write(src / "components" / "Box" / "index.tsx", wrapper_ts("Box", "Box"))
-    write(src / "components" / "Button" / "index.tsx", wrapper_ts("Button", "Button"))
-    write(src / "components" / "Card" / "index.tsx", wrapper_ts("Card", "Card"))
-    write(src / "components" / "Stack" / "index.tsx", wrapper_ts("Stack", "Stack"))
-    write(src / "components" / "TextField" / "index.tsx", wrapper_ts("TextField", "TextField"))
+    write(src / "components" / "SkeletonLoader" / "index.tsx", skeleton_loader_ts())
+    write(src / "hocs" / "withSkeleton" / "index.tsx", with_skeleton_ts())
+    write(src / "components" / "UserRow" / "index.tsx", user_row_ts())
+    write(src / "components" / "TextField" / "index.tsx", text_field_ts())
+    write(src / "components" / "PasswordField" / "index.tsx", password_field_ts())
+    write(src / "components" / "Select" / "index.tsx", select_ts())
+    write(src / "components" / "Checkbox" / "index.tsx", checkbox_ts())
+    write(src / "components" / "FormControlLabel" / "index.tsx", form_control_label_ts())
+    write(src / "components" / "FormControl" / "index.tsx", mui_wrapper_ts("FormControl"))
+    write(src / "components" / "FormHelperText" / "index.tsx", mui_wrapper_ts("FormHelperText"))
+    write(src / "components" / "InputAdornment" / "index.tsx", mui_wrapper_ts("InputAdornment"))
+    write(src / "components" / "InputLabel" / "index.tsx", mui_wrapper_ts("InputLabel"))
+    write(src / "components" / "Box" / "index.tsx", mui_wrapper_ts("Box"))
+    write(src / "components" / "Button" / "index.tsx", mui_wrapper_ts("Button"))
+    write(src / "components" / "Card" / "index.tsx", mui_wrapper_ts("Card"))
+    write(src / "components" / "IconButton" / "index.tsx", mui_wrapper_ts("IconButton"))
+    write(src / "components" / "Tooltip" / "index.tsx", mui_wrapper_ts("Tooltip"))
+    write(src / "components" / "Stack" / "index.tsx", mui_wrapper_ts("Stack"))
+    write(src / "components" / "Avatar" / "index.tsx", mui_wrapper_ts("Avatar"))
+    write(src / "components" / "Badge" / "index.tsx", mui_wrapper_ts("Badge"))
+    write(src / "components" / "Drawer" / "index.tsx", mui_wrapper_ts("Drawer"))
+    write(src / "components" / "Link" / "index.tsx", mui_wrapper_ts("Link"))
+    write(src / "components" / "List" / "index.tsx", mui_wrapper_ts("List"))
+    write(src / "components" / "ListItemButton" / "index.tsx", mui_wrapper_ts("ListItemButton"))
+    write(src / "components" / "ListItemIcon" / "index.tsx", mui_wrapper_ts("ListItemIcon"))
+    write(src / "components" / "ListItemText" / "index.tsx", mui_wrapper_ts("ListItemText"))
+    write(src / "components" / "Menu" / "index.tsx", mui_wrapper_ts("Menu"))
+    write(src / "components" / "MenuItem" / "index.tsx", mui_wrapper_ts("MenuItem"))
+    write(src / "components" / "Pagination" / "index.tsx", mui_wrapper_ts("Pagination"))
+    write(src / "components" / "Switch" / "index.tsx", switch_ts())
+    write(src / "components" / "AppBar" / "index.tsx", app_bar_ts())
+    write(src / "components" / "Container" / "index.tsx", container_ts())
+    write(src / "components" / "Toolbar" / "index.tsx", toolbar_ts())
+    write(src / "components" / "Typography" / "index.tsx", typography_base_ts())
+    write(src / "components" / "Table" / "index.tsx", mui_wrapper_ts("Table"))
+    write(src / "components" / "TableBody" / "index.tsx", mui_wrapper_ts("TableBody"))
+    write(src / "components" / "TableCell" / "index.tsx", mui_wrapper_ts("TableCell"))
+    write(src / "components" / "TableCellHead" / "index.tsx", table_cell_head_ts())
+    write(src / "components" / "TableContainer" / "index.tsx", mui_wrapper_ts("TableContainer"))
+    write(src / "components" / "TableHead" / "index.tsx", mui_wrapper_ts("TableHead"))
+    write(src / "components" / "TableRow" / "index.tsx", mui_wrapper_ts("TableRow"))
     write(src / "components" / "H1" / "index.tsx", typography_wrapper("H1", "h1"))
     write(src / "components" / "H2" / "index.tsx", typography_wrapper("H2", "h2"))
     write(src / "components" / "H3" / "index.tsx", typography_wrapper("H3", "h3"))
@@ -439,7 +821,6 @@ export const appStateSlice = createSlice({
 def app_model_ts() -> str:
     return """
 import { useDispatch } from 'react-redux';
-import { useSelector } from 'react-redux';
 import type { RootState } from '@/store';
 import { appStateSlice } from '@/states/appState';
 import type { ThemeMode } from '@/interfaces/ThemeMode';
@@ -635,6 +1016,7 @@ export const useUserSaveSchema = () =>
       .oneOf(['active', 'inactive', 'invited'])
       .required('Status is required'),
     password: yup.string().optional(),
+    requirePasswordChange: yup.boolean().default(false),
   });
 """
 
@@ -650,10 +1032,20 @@ def common_json(lang: str) -> str:
                     "save": "Guardar",
                     "cancel": "Cancelar",
                 },
+                "table": {
+                    "actions": "Acciones",
+                },
+                "languages": {
+                    "en": "Inglés",
+                    "es": "Español",
+                },
                 "titles": {
                     "users": "Usuarios",
                     "createUser": "Crear usuario",
                     "editUser": "Editar usuario",
+                },
+                "descriptions": {
+                    "users": "Un inicio minimo de CRUD.",
                 },
                 "loading": "Cargando usuarios...",
                 "empty": "No hay usuarios todavía.",
@@ -670,10 +1062,20 @@ def common_json(lang: str) -> str:
                 "save": "Save",
                 "cancel": "Cancel",
             },
+            "table": {
+                "actions": "Actions",
+            },
+            "languages": {
+                "en": "English",
+                "es": "Spanish",
+            },
             "titles": {
                 "users": "Users",
                 "createUser": "Create user",
                 "editUser": "Edit user",
+            },
+            "descriptions": {
+                "users": "A minimal CRUD starter.",
             },
             "loading": "Loading users...",
             "empty": "No users yet.",
@@ -692,6 +1094,17 @@ def glossary_json(lang: str) -> str:
                     "roleId": "Rol",
                     "status": "Estado",
                     "password": "Contraseña",
+                    "requirePasswordChange": "Requerir cambio de contraseña",
+                },
+                "roles": {
+                    "admin": "Administrador",
+                    "editor": "Editor",
+                    "viewer": "Lector",
+                },
+                "statuses": {
+                    "active": "Activo",
+                    "invited": "Invitado",
+                    "inactive": "Inactivo",
                 },
             },
             indent=2,
@@ -705,6 +1118,17 @@ def glossary_json(lang: str) -> str:
                 "roleId": "Role",
                 "status": "Status",
                 "password": "Password",
+                "requirePasswordChange": "Require password change",
+            },
+            "roles": {
+                "admin": "Admin",
+                "editor": "Editor",
+                "viewer": "Viewer",
+            },
+            "statuses": {
+                "active": "Active",
+                "invited": "Invited",
+                "inactive": "Inactive",
             },
         },
         indent=2,
@@ -718,8 +1142,9 @@ import { useSelector } from 'react-redux';
 import { I18nextProvider, initReactI18next } from 'react-i18next';
 import i18n from 'i18next';
 import { useAppModel } from '@/models/useAppModel';
+import type { ReactNode } from 'react';
 
-export const I18nProvider = ({ children, resources }: { children?: React.ReactNode; resources: any }) => {
+export const I18nProvider = ({ children, resources }: { children?: ReactNode; resources: any }) => {
   const appModel = useAppModel();
   const appState = useSelector(appModel.selectAppState);
 
@@ -754,8 +1179,9 @@ import { useSelector } from 'react-redux';
 import { CssBaseline, ThemeProvider as MuiThemeProvider, capitalize } from '@mui/material';
 import { useAppModel } from '@/models/useAppModel';
 import * as themes from '@/themes/clarity';
+import type { ReactNode } from 'react';
 
-export const ThemeProvider = ({ children }: { children?: React.ReactNode }) => {
+export const ThemeProvider = ({ children }: { children?: ReactNode }) => {
   const { selectAppState, setThemeMode, setThemeName } = useAppModel();
   const appState = useSelector(selectAppState);
 
@@ -834,7 +1260,15 @@ def main_layout_ts() -> str:
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
-import { AppBar, Box, Button, Container, MenuItem, Select, Stack, Switch, Toolbar, Typography } from '@mui/material';
+import { AppBar } from '@/components/AppBar';
+import { Box } from '@/components/Box';
+import { Button } from '@/components/Button';
+import { Container } from '@/components/Container';
+import { Select } from '@/components/Select';
+import { Stack } from '@/components/Stack';
+import { Switch } from '@/components/Switch';
+import { Toolbar } from '@/components/Toolbar';
+import { Typography } from '@/components/Typography';
 import { useAppModel } from '@/models/useAppModel';
 
 export const MainLayout = () => {
@@ -855,11 +1289,12 @@ export const MainLayout = () => {
             <Select
               size="small"
               value={appState.selectedLang}
-              onChange={(event) => appModel.setSelectedLang(event.target.value)}
-            >
-              <MenuItem value="en">EN</MenuItem>
-              <MenuItem value="es">ES</MenuItem>
-            </Select>
+              options={[
+                { value: 'en', label: t('common:languages.en') },
+                { value: 'es', label: t('common:languages.es') },
+              ]}
+              onChange={(event) => appModel.setSelectedLang(String(event.target.value))}
+            />
             <Switch
               checked={isDark}
               onChange={() => appModel.setThemeMode(isDark ? 'light' : 'dark')}
@@ -882,6 +1317,7 @@ export const MainLayout = () => {
 def skeleton_ts() -> str:
     return """
 import { Skeleton as MuiSkeleton, SkeletonProps as MuiSkeletonProps } from '@mui/material';
+import type { PropsWithChildren } from 'react';
 
 export interface SkeletonProps extends MuiSkeletonProps {
   loading?: boolean;
@@ -889,7 +1325,7 @@ export interface SkeletonProps extends MuiSkeletonProps {
   hideOnSkeleton?: boolean;
 }
 
-export const Skeleton = ({ loading, children, fitContent, hideOnSkeleton = false, sx, ...rest }: React.PropsWithChildren<SkeletonProps>) => {
+export const Skeleton = ({ loading, children, fitContent, hideOnSkeleton = false, sx, ...rest }: PropsWithChildren<SkeletonProps>) => {
   if (!loading) {
     return <>{children}</>;
   }
@@ -932,19 +1368,27 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
-import { Button, Card, Table, TableBody, TableCell, TableHead, TableRow } from '@mui/material';
+import { Button } from '@/components/Button';
+import { Card } from '@/components/Card';
+import { Table } from '@/components/Table';
+import { TableBody } from '@/components/TableBody';
+import { TableCell } from '@/components/TableCell';
+import { TableHead } from '@/components/TableHead';
+import { TableRow } from '@/components/TableRow';
+import { SkeletonLoader } from '@/components/SkeletonLoader';
+import { Stack } from '@/components/Stack';
 import { useUserModel } from '@/models/useUserModel';
-import { UsersTableSkeleton } from '@/components/UsersTableSkeleton';
 import { H1 } from '@/components/H1';
 import { Body1 } from '@/components/Body1';
-import { Stack } from '@/components/Stack';
+import { UserRow } from '@/components/UserRow';
 
 export const Users = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const userModel = useUserModel();
   const userPaginatedQuery = useSelector(userModel.selectPaginatedQuery);
-  const { paginationParams = { _page: 0, _size: 10 }, ids, initialLoading, listing } = userPaginatedQuery;
+  const { paginationParams = { _page: 0, _size: 10 }, ids, initialLoading } = userPaginatedQuery;
+  const rowIds = initialLoading ? Array.from({ length: 5 }, (_, index) => `skeleton-${index}`) : ids ?? [];
 
   useEffect(() => {
     userModel.list({
@@ -958,16 +1402,14 @@ export const Users = () => {
       <Stack direction="row" justifyContent="space-between" alignItems="center">
         <div>
           <H1>{t('common:titles.users')}</H1>
-          <Body1>{t('common:loading')}</Body1>
+          <Body1>{t('common:descriptions.users')}</Body1>
         </div>
         <Button variant="contained" onClick={() => navigate('/users/create')}>
           {t('common:actions.create')}
         </Button>
       </Stack>
       <Card sx={{ p: 2 }}>
-        {initialLoading ? (
-          <UsersTableSkeleton />
-        ) : (
+        <SkeletonLoader loading={initialLoading} skeletonProps={{ height: 56 }}>
           <Table>
             <TableHead>
               <TableRow>
@@ -975,24 +1417,64 @@ export const Users = () => {
                 <TableCell>{t('glossary:fields.email')}</TableCell>
                 <TableCell>{t('glossary:fields.roleId')}</TableCell>
                 <TableCell>{t('glossary:fields.status')}</TableCell>
+                <TableCell>{t('common:table.actions')}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {ids.map((id) => (
-                <TableRow key={id}>
-                  <TableCell>{String(id)}</TableCell>
-                  <TableCell>{listing ? t('common:loading') : String(id)}</TableCell>
-                  <TableCell>1</TableCell>
-                  <TableCell>active</TableCell>
-                </TableRow>
+              {rowIds.map((id) => (
+                <UserRow key={id} userId={String(id)} />
               ))}
             </TableBody>
           </Table>
-        )}
+        </SkeletonLoader>
       </Card>
     </Stack>
   );
 };
+"""
+
+
+def user_row_ts() -> str:
+    return """
+import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { Button } from '@/components/Button';
+import { TableCell } from '@/components/TableCell';
+import { TableRow } from '@/components/TableRow';
+import { useUserModel } from '@/models/useUserModel';
+import type { RootState } from '@/store';
+import { withSkeleton } from '@/hocs/withSkeleton';
+
+const UserRowBase = ({ userId }: { userId: string }) => {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const userModel = useUserModel();
+  const { data: user } = useSelector((state: RootState) => userModel.selectEntity(state, userId));
+
+  if (!user) {
+    return null;
+  }
+
+  return (
+    <TableRow>
+      <TableCell>{user.name}</TableCell>
+      <TableCell>{user.email}</TableCell>
+      <TableCell>{user.roleId}</TableCell>
+      <TableCell>{user.status}</TableCell>
+      <TableCell>
+        <Button size="small" onClick={() => navigate(`/users/${user.id}`)}>
+          {t('common:actions.edit')}
+        </Button>
+        <Button size="small" color="error" onClick={() => userModel.remove(String(user.id))}>
+          {t('common:actions.delete')}
+        </Button>
+      </TableCell>
+    </TableRow>
+  );
+};
+
+export const UserRow = withSkeleton(UserRowBase, { height: 56 });
 """
 
 
@@ -1003,12 +1485,18 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { Button, Card, MenuItem } from '@mui/material';
+import { useTranslation } from 'react-i18next';
+import { Button } from '@/components/Button';
+import { Card } from '@/components/Card';
+import { Checkbox } from '@/components/Checkbox';
+import { PasswordField } from '@/components/PasswordField';
+import { Select } from '@/components/Select';
+import { Stack } from '@/components/Stack';
+import { TextField } from '@/components/TextField';
+import { H1 } from '@/components/H1';
 import { useUserModel } from '@/models/useUserModel';
 import { useUserSaveSchema } from '@/form-schemas/useUserSaveSchema';
-import { TextField } from '@/components/TextField';
-import { Stack } from '@/components/Stack';
-import { H1 } from '@/components/H1';
+import type { RootState } from '@/store';
 
 const defaultValues = {
   name: '',
@@ -1016,9 +1504,11 @@ const defaultValues = {
   roleId: 1,
   status: 'active' as const,
   password: '',
+  requirePasswordChange: false,
 };
 
 export const UserSave = () => {
+  const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const userModel = useUserModel();
@@ -1028,7 +1518,9 @@ export const UserSave = () => {
     resolver: yupResolver(schema),
     defaultValues,
   });
-  const selected = useSelector((state: any) => (id ? userModel.selectEntity(state, id) : { data: undefined }));
+  const selected = useSelector((state: RootState) =>
+    id ? userModel.selectEntity(state, id) : { data: undefined }
+  );
 
   useEffect(() => {
     if (isEdit && id) {
@@ -1038,7 +1530,14 @@ export const UserSave = () => {
 
   useEffect(() => {
     if (selected?.data) {
-      reset(selected.data);
+      reset({
+        name: selected.data.name,
+        email: selected.data.email,
+        roleId: selected.data.roleId,
+        status: selected.data.status || 'active',
+        password: '',
+        requirePasswordChange: false,
+      });
     }
   }, [selected, reset]);
 
@@ -1050,30 +1549,45 @@ export const UserSave = () => {
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <Stack spacing={3}>
-        <H1>{isEdit ? 'Edit user' : 'Create user'}</H1>
+        <H1>{isEdit ? t('common:titles.editUser') : t('common:titles.createUser')}</H1>
         <Card sx={{ p: 2 }}>
           <Stack spacing={2}>
-            <TextField name="name" control={control} label="Name" />
-            <TextField name="email" control={control} label="Email" />
-            <TextField name="roleId" control={control} label="Role" select>
-              <MenuItem value={1}>Admin</MenuItem>
-              <MenuItem value={2}>Editor</MenuItem>
-              <MenuItem value={3}>Viewer</MenuItem>
-            </TextField>
-            <TextField name="status" control={control} label="Status" select>
-              <MenuItem value="active">Active</MenuItem>
-              <MenuItem value="invited">Invited</MenuItem>
-              <MenuItem value="inactive">Inactive</MenuItem>
-            </TextField>
-            <TextField name="password" control={control} label="Password" type="password" />
+            <TextField name="name" control={control} label={t('glossary:fields.name')} />
+            <TextField name="email" control={control} label={t('glossary:fields.email')} />
+            <Select
+              name="roleId"
+              control={control}
+              label={t('glossary:fields.roleId')}
+              options={[
+                { value: 1, label: t('glossary:roles.admin') },
+                { value: 2, label: t('glossary:roles.editor') },
+                { value: 3, label: t('glossary:roles.viewer') },
+              ]}
+            />
+            <Select
+              name="status"
+              control={control}
+              label={t('glossary:fields.status')}
+              options={[
+                { value: 'active', label: t('glossary:statuses.active') },
+                { value: 'invited', label: t('glossary:statuses.invited') },
+                { value: 'inactive', label: t('glossary:statuses.inactive') },
+              ]}
+            />
+            <PasswordField name="password" control={control} label={t('glossary:fields.password')} />
+            <Checkbox
+              name="requirePasswordChange"
+              control={control}
+              label={t('glossary:fields.requirePasswordChange')}
+            />
           </Stack>
         </Card>
         <Stack direction="row" spacing={2}>
           <Button type="submit" variant="contained">
-            Save
+            {t('common:actions.save')}
           </Button>
           <Button variant="outlined" onClick={() => navigate('/users')}>
-            Cancel
+            {t('common:actions.cancel')}
           </Button>
         </Stack>
       </Stack>

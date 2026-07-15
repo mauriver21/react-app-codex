@@ -9,6 +9,8 @@ export const common = {
     cancel: 'Cancel',
     switchTheme: 'Switch theme',
     switchLanguage: 'Cambiar a español',
+    showPassword: 'Show password',
+    hidePassword: 'Hide password',
   },
   users: {
     title: 'Users',
@@ -29,6 +31,8 @@ export const common = {
     email: 'Email',
     role: 'Role',
     status: 'Status',
+    password: 'Password',
+    requirePasswordChange: 'Require password change',
     actions: 'Actions',
   },
   validation: {

@@ -1,27 +1,33 @@
-import { useEffect, useState } from 'react';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, FormControl, InputLabel, MenuItem, Paper, Select } from '@mui/material';
-import { Controller as FormController, useForm } from 'react-hook-form';
-import { useSelector } from 'react-redux';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { Button } from '@/components/Button';
-import { H1 } from '@/components/H1';
-import { Stack } from '@/components/Stack';
-import { TextField } from '@/components/TextField';
+import { useEffect, useState } from "react";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { Alert } from "@mui/material";
+import { useForm } from "react-hook-form";
+import { useSelector } from "react-redux";
+import { useNavigate, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { Button } from "@/components/Button";
+import { Card } from "@/components/Card";
+import { Checkbox } from "@/components/Checkbox";
+import { H1 } from "@/components/H1";
+import { PasswordField } from "@/components/PasswordField";
+import { Select } from "@/components/Select";
+import { Stack } from "@/components/Stack";
+import { TextField } from "@/components/TextField";
 import {
   useUserSaveSchema,
   type UserSaveFormValues,
-} from '@/form-schemas/useUserSaveSchema';
-import { USER_ROLES, USER_STATUSES, type User } from '@/interfaces/User';
-import { useUserModel } from '@/models/useUserModel';
-import type { RootState } from '@/store';
+} from "@/form-schemas/useUserSaveSchema";
+import { USER_ROLES, USER_STATUSES, type User } from "@/interfaces/User";
+import { useUserModel } from "@/models/useUserModel";
+import type { RootState } from "@/store";
 
 const emptyValues: UserSaveFormValues = {
-  name: '',
-  email: '',
-  roleId: 'viewer',
-  status: 'active',
+  name: "",
+  email: "",
+  roleId: "",
+  status: "",
+  password: "",
+  requirePasswordChange: false,
 };
 
 const toFormValues = (user: User): UserSaveFormValues => ({
@@ -29,6 +35,8 @@ const toFormValues = (user: User): UserSaveFormValues => ({
   email: user.email,
   roleId: user.roleId,
   status: user.status,
+  password: "",
+  requirePasswordChange: false,
 });
 
 export const UserSavePage = () => {
@@ -37,18 +45,19 @@ export const UserSavePage = () => {
   const { id } = useParams();
   const schema = useUserSaveSchema();
   const model = useUserModel();
-  const entity = useSelector((state: RootState) => model.selectEntity(state, id));
+  const entity = useSelector((state: RootState) =>
+    model.selectEntity(state, id),
+  );
   const currentUser = entity.data as User | undefined;
   const [error, setError] = useState<string>();
   const isEdit = Boolean(id);
   const {
     control,
-    register,
     handleSubmit,
     reset,
-    formState: { errors, isSubmitting },
+    formState: { isSubmitting },
   } = useForm<UserSaveFormValues>({
-    resolver: zodResolver(schema),
+    resolver: yupResolver(schema),
     defaultValues: currentUser ? toFormValues(currentUser) : emptyValues,
   });
 
@@ -57,7 +66,7 @@ export const UserSavePage = () => {
       void model
         .readWithResponse(id)
         .then(({ data }) => reset(toFormValues(data)))
-        .catch(() => setError(t('users.loadError')));
+        .catch(() => setError(t("users.loadError")));
     }
     // A route id identifies the one initial record load for this mounted form.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -76,77 +85,79 @@ export const UserSavePage = () => {
     try {
       if (isEdit && id) await model.updateWithResponse(id, user);
       else await model.createWithResponse(user);
-      navigate('/users');
+      navigate("/users");
     } catch {
-      setError(t('users.saveError'));
+      setError(t("users.saveError"));
     }
   };
 
   return (
-    <Stack spacing={3} sx={{ maxWidth: 680, mx: 'auto' }}>
-      <H1>{t(isEdit ? 'users.editTitle' : 'users.createTitle')}</H1>
+    <Stack spacing={3} sx={{ maxWidth: 680, mx: "auto" }}>
+      <H1>{t(isEdit ? "users.editTitle" : "users.createTitle")}</H1>
       {error && <Alert severity="error">{error}</Alert>}
-      <Paper
+      <Card
         component="form"
         onSubmit={handleSubmit(submit)}
         variant="outlined"
         sx={{ p: { xs: 3, sm: 4 } }}
       >
         <Stack spacing={3}>
-          <TextField
-            label={t('fields.name')}
-            error={Boolean(errors.name)}
-            helperText={errors.name?.message}
+          <TextField<UserSaveFormValues>
+            name="name"
+            control={control}
+            label={t("fields.name")}
             autoFocus
-            {...register('name')}
           />
-          <TextField
-            label={t('fields.email')}
+          <TextField<UserSaveFormValues>
+            name="email"
+            control={control}
+            label={t("fields.email")}
             type="email"
-            error={Boolean(errors.email)}
-            helperText={errors.email?.message}
-            {...register('email')}
           />
-          <FormController
+          <Select<UserSaveFormValues>
             name="roleId"
             control={control}
-            render={({ field }) => (
-              <FormControl>
-                <InputLabel id="role-label">{t('fields.role')}</InputLabel>
-                <Select {...field} labelId="role-label" label={t('fields.role')}>
-                  {USER_ROLES.map((role) => (
-                    <MenuItem key={role} value={role}>
-                      {t(`glossary:roles.${role}`)}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            )}
+            label={t("fields.role")}
+            options={USER_ROLES.map((role) => ({
+              value: role,
+              label: t(`glossary:roles.${role}`),
+            }))}
           />
-          <FormController
+          <Select<UserSaveFormValues>
             name="status"
             control={control}
-            render={({ field }) => (
-              <FormControl>
-                <InputLabel id="status-label">{t('fields.status')}</InputLabel>
-                <Select {...field} labelId="status-label" label={t('fields.status')}>
-                  {USER_STATUSES.map((status) => (
-                    <MenuItem key={status} value={status}>
-                      {t(`glossary:statuses.${status}`)}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            )}
+            label={t("fields.status")}
+            options={USER_STATUSES.map((status) => ({
+              value: status,
+              label: t(`glossary:statuses.${status}`),
+            }))}
           />
-          <Stack direction="row" spacing={1.5} sx={{ justifyContent: 'flex-end' }}>
-            <Button onClick={() => navigate('/users')}>{t('actions.cancel')}</Button>
+          <PasswordField<UserSaveFormValues>
+            name="password"
+            control={control}
+            label={t("fields.password")}
+            showPasswordLabel={t("actions.showPassword")}
+            hidePasswordLabel={t("actions.hidePassword")}
+          />
+          <Checkbox<UserSaveFormValues>
+            name="requirePasswordChange"
+            control={control}
+            label={t("fields.requirePasswordChange")}
+          />
+          <Stack
+            direction="row"
+            spacing={1.5}
+            sx={{ justifyContent: "flex-end" }}
+          >
+            <Button onClick={() => navigate("/users")}>
+              {t("actions.cancel")}
+            </Button>
             <Button type="submit" variant="contained" disabled={isSubmitting}>
-              {t('actions.save')}
+              {t("actions.save")}
             </Button>
           </Stack>
         </Stack>
-      </Paper>
+      </Card>
     </Stack>
   );
 };

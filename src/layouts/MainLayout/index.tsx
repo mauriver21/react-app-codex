@@ -1,16 +1,14 @@
-import {
-  AppBar,
-  Container,
-  IconButton,
-  Toolbar,
-} from '@mui/material';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
+import { AppBar } from '@/components/AppBar';
 import { Box } from '@/components/Box';
 import { Button } from '@/components/Button';
+import { Container } from '@/components/Container';
 import { H6 } from '@/components/H6';
 import { Stack } from '@/components/Stack';
+import { Switch } from '@/components/Switch';
+import { Toolbar } from '@/components/Toolbar';
 import { setLanguage, setThemeMode } from '@/states/appState';
 import type { AppDispatch, RootState } from '@/store';
 
@@ -38,13 +36,11 @@ export const MainLayout = () => {
             >
               {t('actions.switchLanguage')}
             </Button>
-            <IconButton
-              color="inherit"
-              aria-label={t('actions.switchTheme')}
+            <Switch
+              checked={themeMode === 'dark'}
+              slotProps={{ input: { 'aria-label': t('actions.switchTheme') } }}
               onClick={() => dispatch(setThemeMode(themeMode === 'light' ? 'dark' : 'light'))}
-            >
-              {themeMode === 'light' ? '◐' : '◑'}
-            </IconButton>
+            />
           </Stack>
         </Toolbar>
       </AppBar>

@@ -16,6 +16,7 @@ Use this reference when generating the app structure, provider wiring, and User 
 - `react-redux-use-model`
 - `i18next` and `react-i18next`
 - `react-hook-form` and `@hookform/resolvers`
+- `yup`
 - `msw`
 
 ## Required Source Layout
@@ -29,11 +30,23 @@ src/
 ├── api-clients/
 │   └── useUserApiClient/
 ├── components/
-│   ├── AppSetup/
+│   ├── AppBar/
 │   ├── Body1/
 │   ├── Body2/
 │   ├── Box/
 │   ├── Button/
+│   ├── Card/
+│   ├── Container/
+│   ├── Checkbox/
+│   ├── FormControl/
+│   ├── FormHelperText/
+│   ├── FormControlLabel/
+│   ├── IconButton/
+│   ├── InputAdornment/
+│   ├── InputLabel/
+│   ├── PasswordField/
+│   ├── MenuItem/
+│   ├── Select/
 │   ├── H1/
 │   ├── H2/
 │   ├── H3/
@@ -41,10 +54,25 @@ src/
 │   ├── H5/
 │   ├── H6/
 │   ├── I18nProvider/
+│   ├── SkeletonLoader/
 │   ├── Skeleton/
 │   ├── Stack/
+│   ├── Switch/
+│   ├── Table/
+│   ├── TableBody/
+│   ├── TableCell/
+│   ├── TableCellHead/
+│   ├── TableContainer/
+│   ├── TableHead/
+│   ├── TableRow/
 │   ├── TextField/
+│   ├── Toolbar/
+│   ├── Tooltip/
+│   ├── Typography/
+│   ├── UserRow/
 │   └── ThemeProvider/
+├── hocs/
+│   └── withSkeleton/
 ├── interfaces/
 │   └── User.ts
 ├── form-schemas/
@@ -89,6 +117,8 @@ Wire the root in this order:
 6. `BrowserRouter`
 7. `App`
 
+Register these providers directly in `main.tsx`. Do not generate an `AppSetup` component.
+
 ## Routing
 
 - Use `useRoutes` with a `RouteObject[]`.
@@ -110,12 +140,16 @@ Required pieces:
 - `normalizedEntitiesState` in the root reducer
 - redux-persist storage import workaround: `const storage = (storageDefault as any).default || storageDefault;`
 - named exports and arrow functions in scaffolded source
+- use the current admin-style component wrappers and hook-based field components as the default scaffold style
 
 ## Forms
 
 - Put every form schema in `src/form-schemas`.
 - Use React Hook Form for User create/edit.
 - Keep schema logic outside the page component.
+- Prefer `yup` over `zod` in all generated form validation.
+- Generate field wrappers that accept `control` and `name` props following the current `TextField` pattern.
+- Generate `PasswordField`, `Select`, and `Checkbox` wrappers on top of the `TextField` pattern.
 
 ## MSW
 
@@ -141,7 +175,7 @@ Use in-memory mock data and keep the CRUD handlers aligned with the model layer.
 - Use the `clarity` theme family.
 - Export light and dark variants.
 - Default to light mode and allow switching to dark mode.
-- Scaffold wrappers for `H1` through `H6`, `Body1`, `Body2`, `Skeleton`, and the basic MUI primitives used by the CRUD screen.
+- Scaffold wrappers for the MUI primitives used by the app, plus `H1` through `H6`, `Body1`, `Body2`, `Skeleton`, `SkeletonLoader`, and `withSkeleton`.
 
 ## Acceptance Criteria
 

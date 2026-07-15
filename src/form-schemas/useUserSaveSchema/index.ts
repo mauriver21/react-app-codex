@@ -1,20 +1,34 @@
-import { useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
-import { z } from 'zod';
+import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import * as yup from "yup";
 
 export const useUserSaveSchema = () => {
   const { t } = useTranslation();
 
   return useMemo(
     () =>
-      z.object({
-        name: z.string().trim().min(1, t('validation.required')),
-        email: z.string().trim().min(1, t('validation.required')).email(t('validation.email')),
-        roleId: z.enum(['admin', 'editor', 'viewer']),
-        status: z.enum(['active', 'inactive']),
+      yup.object({
+        name: yup.string().trim().required(t("validation.required")),
+        email: yup
+          .string()
+          .trim()
+          .required(t("validation.required"))
+          .email(t("validation.email")),
+        roleId: yup
+          .mixed<"admin" | "editor" | "viewer" | "">()
+          .oneOf(["admin", "editor", "viewer", ""])
+          .required(t("validation.required")),
+        status: yup
+          .mixed<"active" | "inactive" | "">()
+          .oneOf(["active", "inactive", ""])
+          .required(t("validation.required")),
+        password: yup.string().default(""),
+        requirePasswordChange: yup.boolean().default(false),
       }),
     [t],
   );
 };
 
-export type UserSaveFormValues = z.infer<ReturnType<typeof useUserSaveSchema>>;
+export type UserSaveFormValues = yup.InferType<
+  ReturnType<typeof useUserSaveSchema>
+>;

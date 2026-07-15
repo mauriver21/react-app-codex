@@ -2,52 +2,24 @@ import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import {
-  Alert,
-  Chip,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-} from '@mui/material';
+import { Alert } from '@mui/material';
 import { Body1 } from '@/components/Body1';
 import { Box } from '@/components/Box';
 import { Button } from '@/components/Button';
+import { Card } from '@/components/Card';
 import { H1 } from '@/components/H1';
-import { Skeleton } from '@/components/Skeleton';
+import { SkeletonLoader } from '@/components/SkeletonLoader';
 import { Stack } from '@/components/Stack';
+import { Table } from '@/components/Table';
+import { TableBody } from '@/components/TableBody';
+import { TableCell } from '@/components/TableCell';
+import { TableContainer } from '@/components/TableContainer';
+import { TableHead } from '@/components/TableHead';
+import { TableRow } from '@/components/TableRow';
+import { UserRow } from '@/components/UserRow';
+import type { User } from '@/interfaces/User';
 import { USER_QUERY_KEY, useUserModel } from '@/models/useUserModel';
 import type { RootState } from '@/store';
-
-const UserTableSkeleton = ({ label }: { label: string }) => (
-  <TableContainer component={Paper} variant="outlined" aria-label={label}>
-    <Table>
-      <TableHead>
-        <TableRow>
-          {Array.from({ length: 5 }, (_, index) => (
-            <TableCell key={index}>
-              <Skeleton width={index === 4 ? 72 : 96} />
-            </TableCell>
-          ))}
-        </TableRow>
-      </TableHead>
-      <TableBody>
-        {Array.from({ length: 5 }, (_, row) => (
-          <TableRow key={row}>
-            {Array.from({ length: 5 }, (_, column) => (
-              <TableCell key={column} align={column === 4 ? 'right' : 'left'}>
-                <Skeleton width={column === 4 ? 112 : `${72 + column * 6}%`} />
-              </TableCell>
-            ))}
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-  </TableContainer>
-);
 
 export const UsersPage = () => {
   const { t } = useTranslation();
@@ -55,6 +27,10 @@ export const UsersPage = () => {
   const model = useUserModel();
   const users = useSelector((state: RootState) => model.selectAllEntities(state));
   const [error, setError] = useState<string>();
+  const initialLoading = model.listState.isLoading && users.length === 0;
+  const rowIds = initialLoading
+    ? Array.from({ length: 5 }, (_, index) => `skeleton-${index}`)
+    : users.map((user) => String(user.id));
 
   useEffect(() => {
     void model
@@ -67,11 +43,11 @@ export const UsersPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const removeUser = async (id: string, name: string) => {
-    if (!window.confirm(t('users.deleteConfirm', { name }))) return;
+  const removeUser = async (user: User) => {
+    if (!window.confirm(t('users.deleteConfirm', { name: user.name }))) return;
     setError(undefined);
     try {
-      await model.removeWithResponse(id);
+      await model.removeWithResponse(user.id);
     } catch {
       setError(t('users.deleteError'));
     }
@@ -93,10 +69,9 @@ export const UsersPage = () => {
 
       {error && <Alert severity="error">{error}</Alert>}
 
-      {model.listState.isLoading && users.length === 0 ? (
-        <UserTableSkeleton label={t('users.loading')} />
-      ) : (
-        <TableContainer component={Paper} variant="outlined">
+      <Card variant="outlined">
+        <SkeletonLoader loading={initialLoading} skeletonProps={{ animation: 'wave' }}>
+          <TableContainer aria-label={initialLoading ? t('users.loading') : undefined}>
           <Table>
             <TableHead>
               <TableRow>
@@ -108,29 +83,10 @@ export const UsersPage = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {users.map((user) => (
-                <TableRow key={user.id} hover>
-                  <TableCell sx={{ fontWeight: 650 }}>{user.name}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>{t(`glossary:roles.${user.roleId}`)}</TableCell>
-                  <TableCell>
-                    <Chip
-                      size="small"
-                      color={user.status === 'active' ? 'success' : 'default'}
-                      label={t(`glossary:statuses.${user.status}`)}
-                    />
-                  </TableCell>
-                  <TableCell align="right">
-                    <Button size="small" onClick={() => navigate(`/users/${user.id}`)}>
-                      {t('actions.edit')}
-                    </Button>
-                    <Button size="small" color="error" onClick={() => void removeUser(user.id, user.name)}>
-                      {t('actions.delete')}
-                    </Button>
-                  </TableCell>
-                </TableRow>
+              {rowIds.map((userId) => (
+                <UserRow key={userId} userId={userId} onDelete={(user) => void removeUser(user)} />
               ))}
-              {users.length === 0 && (
+              {!initialLoading && users.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={5} align="center" sx={{ py: 7, color: 'text.secondary' }}>
                     {t('users.empty')}
@@ -139,8 +95,9 @@ export const UsersPage = () => {
               )}
             </TableBody>
           </Table>
-        </TableContainer>
-      )}
+          </TableContainer>
+        </SkeletonLoader>
+      </Card>
     </Stack>
   );
 };

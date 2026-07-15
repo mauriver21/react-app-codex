@@ -1,6 +1,6 @@
 ---
 name: react-scaffold-app
-description: Scaffold a minimal TypeScript React app that follows the current packages/web/admin conventions, including i18n, React Router, MUI clarity light and dark themes, Redux plus react-redux-use-model, React Hook Form, a CRUD-ready User model layer, and MSW for browser and test mocks. Use when creating a new standalone React app or a new packages/web workspace package from the current admin-style scaffold.
+description: Scaffold a minimal TypeScript React app that follows the current packages/web/admin conventions, including i18n, React Router, MUI clarity light and dark themes, Redux plus react-redux-use-model, React Hook Form field wrappers, yup validation, a CRUD-ready User model layer, withSkeleton loading states, and MSW for browser and test mocks. Use when creating a new standalone React app or a new packages/web workspace package from the current admin-style scaffold.
 ---
 
 # React Scaffold App
@@ -20,9 +20,15 @@ Create a compact React application scaffold that starts with a real User CRUD ex
    - React Router object routes
    - MUI `clarity` light and dark themes
    - React Hook Form with form schemas in `src/form-schemas`
+   - `yup` for validation schemas
+   - RHF-enhanced field components (`TextField`, `PasswordField`, `Select`, `Checkbox`)
+   - `withSkeleton` and `SkeletonLoader` loading utilities
+   - MUI wrapper components for the scaffolded app
    - MSW browser and Node mocks
    - arrow functions and named exports in generated source files
+   - register providers directly in `main.tsx`; do not create an `AppSetup` component
 4. Build the source tree described in [references/scaffold-contract.md](references/scaffold-contract.md).
+   - Use [scripts/scaffold.py](scripts/scaffold.py) when you need a deterministic starter tree.
 5. Keep the UI minimal and CRUD-oriented:
    - user list
    - user form for create and edit
@@ -41,9 +47,17 @@ Create a compact React application scaffold that starts with a real User CRUD ex
 - `src/models/useUserModel`
 - `src/form-schemas/useUserSaveSchema`
 - `src/mocks/browser.ts`, `src/mocks/server.ts`, `src/mocks/handlers`, and `src/mocks/data`
+- `src/hocs/withSkeleton`
+- `src/components/SkeletonLoader`
+- `src/components/TextField`
+- `src/components/PasswordField`
+- `src/components/Select`
+- `src/components/Checkbox`
 - `src/components/H1` through `src/components/H6`
 - `src/components/Body1` and `src/components/Body2`
 - `src/components/Skeleton`
+- `src/components/UserRow`
+- `scripts/scaffold.py`
 - CRUD routes and pages
 
 ## Guardrails
