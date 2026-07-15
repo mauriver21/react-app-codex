@@ -1,0 +1,4 @@
+interface:
+  display_name: 'React Scaffold App'
+  short_description: 'Scaffold minimal React apps with CRUD, i18n, and MSW'
+  default_prompt: 'Use $react-scaffold-app to scaffold a minimal React app with User CRUD, clarity light and dark themes, i18n, routing, and MSW.'
