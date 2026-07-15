@@ -1,6 +1,11 @@
 export const common = {
   appName: 'Espacio de usuarios',
-  navigation: { users: 'Usuarios' },
+  navigation: {
+    users: 'Usuarios',
+    demos: 'Demos',
+    usersCrud: 'CRUD de usuarios',
+    formShowcase: 'Demostración del formulario',
+  },
   actions: {
     create: 'Agregar usuario',
     edit: 'Editar',
@@ -11,6 +16,10 @@ export const common = {
     switchLanguage: 'Switch to English',
     showPassword: 'Mostrar contraseña',
     hidePassword: 'Ocultar contraseña',
+    fillExample: 'Llenar ejemplo',
+    clear: 'Limpiar',
+    validate: 'Validar',
+    submitForm: 'Enviar formulario',
   },
   users: {
     title: 'Usuarios',
@@ -26,6 +35,20 @@ export const common = {
     saveError: 'No pudimos guardar el usuario.',
     deleteError: 'No pudimos eliminar el usuario.',
   },
+  formShowcase: {
+    title: 'Demostración del formulario',
+    subtitle: 'Prueba todos los campos controlados y compara la validación, limpieza y envío.',
+    emailHelp: 'Usa una dirección de correo laboral o personal.',
+    submittedValues: 'Valores enviados',
+    passwordMasked: 'La contraseña está oculta en esta vista previa.',
+    feedback: {
+      filled: 'Se llenaron los valores de ejemplo.',
+      cleared: 'Se limpió el formulario.',
+      valid: 'Todos los campos son válidos.',
+      invalid: 'Revisa los campos resaltados.',
+      submitted: 'El formulario se envió correctamente.',
+    },
+  },
   fields: {
     name: 'Nombre',
     email: 'Correo electrónico',
@@ -34,10 +57,16 @@ export const common = {
     password: 'Contraseña',
     requirePasswordChange: 'Solicitar cambio de contraseña',
     actions: 'Acciones',
+    fullName: 'Nombre completo',
+    teamRole: 'Rol en el equipo',
+    preferredContact: 'Método de contacto preferido',
+    acceptTerms: 'Acepto los términos de la demostración',
   },
   validation: {
     required: 'Este campo es obligatorio.',
     email: 'Ingresa un correo electrónico válido.',
+    minCharacters: 'Ingresa al menos {{count}} caracteres.',
+    acceptTerms: 'Acepta los términos para continuar.',
   },
   theme: { light: 'Claro', dark: 'Oscuro' },
 } as const;

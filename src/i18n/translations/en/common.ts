@@ -1,6 +1,11 @@
 export const common = {
   appName: 'User workspace',
-  navigation: { users: 'Users' },
+  navigation: {
+    users: 'Users',
+    demos: 'Demos',
+    usersCrud: 'Users CRUD',
+    formShowcase: 'Form showcase',
+  },
   actions: {
     create: 'Add user',
     edit: 'Edit',
@@ -11,6 +16,10 @@ export const common = {
     switchLanguage: 'Cambiar a español',
     showPassword: 'Show password',
     hidePassword: 'Hide password',
+    fillExample: 'Fill example',
+    clear: 'Clear',
+    validate: 'Validate',
+    submitForm: 'Submit form',
   },
   users: {
     title: 'Users',
@@ -26,6 +35,20 @@ export const common = {
     saveError: 'We could not save the user.',
     deleteError: 'We could not delete the user.',
   },
+  formShowcase: {
+    title: 'Form showcase',
+    subtitle: 'Exercise every controlled form field and compare validation, clearing, and submission behavior.',
+    emailHelp: 'Use a work or personal email address.',
+    submittedValues: 'Submitted values',
+    passwordMasked: 'The password is masked in this preview.',
+    feedback: {
+      filled: 'Example values filled.',
+      cleared: 'The form was cleared.',
+      valid: 'Every field is valid.',
+      invalid: 'Review the highlighted fields.',
+      submitted: 'The form was submitted successfully.',
+    },
+  },
   fields: {
     name: 'Name',
     email: 'Email',
@@ -34,10 +57,16 @@ export const common = {
     password: 'Password',
     requirePasswordChange: 'Require password change',
     actions: 'Actions',
+    fullName: 'Full name',
+    teamRole: 'Team role',
+    preferredContact: 'Preferred contact method',
+    acceptTerms: 'I accept the showcase terms',
   },
   validation: {
     required: 'This field is required.',
     email: 'Enter a valid email address.',
+    minCharacters: 'Enter at least {{count}} characters.',
+    acceptTerms: 'Accept the terms to continue.',
   },
   theme: { light: 'Light', dark: 'Dark' },
 } as const;
